@@ -1,0 +1,40 @@
+<!-- ...existing code... -->
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>NHS Medical Document Processor (Demo)</title>
+    <style>
+      body { font-family: Arial, sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; color: #222; }
+      header { display:flex; align-items:center; gap:16px; }
+      h1 { margin:0; font-size:1.6rem; }
+      form { margin-top:20px; background:#fafafa; border:1px solid #eee; padding:18px; border-radius:8px; }
+      label { display:block; margin-bottom:6px; font-weight:600; }
+      input[type="text"], input[type="file"] { width:100%; padding:8px; margin-bottom:12px; box-sizing:border-box; }
+      button { background:#0078d4; color:#fff; border:none; padding:10px 14px; border-radius:6px; cursor:pointer; }
+      .note { color:#555; margin-top:8px; }
+      .message { margin-top:12px; padding:10px; background:#fff4e5; border:1px solid #ffd7a6; border-radius:6px; color:#6a4b00; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>NHS Medical Document Processor</h1>
+    </header>
+
+    <p class="note">This demo anonymises uploaded PDFs and provides a clinical recommendation. No PII is stored. Files are removed immediately after processing.</p>
+
+    {% if message %}
+      <div class="message">{{ message }}</div>
+    {% endif %}
+
+    <form action="/upload" method="post" enctype="multipart/form-data">
+      <label for="patient_id">Patient ID (optional):</label>
+      <input type="text" id="patient_id" name="patient_id" placeholder="Optional identifier">
+
+      <label for="file">Upload PDF</label>
+      <input type="file" id="file" name="file" accept="application/pdf">
+
+      <button type="submit">Upload & Analyse</button>
+    </form>
+  </body>
+</html>
