@@ -30,11 +30,11 @@ python frontend\app.py
 
 # Tech stack
 
-Claude Opus API
-Python (adhering to DTAC NHS guidelines, model context, patient data types (usually strings), etc).
-OCR/PDF storage with ChromaDB Vector Database (with an open source embedding model)
-Flask app for API routes
-Simple HTML front end
+- Claude Opus API
+- Python (adhering to DTAC NHS guidelines, model context, patient data types (usually strings), etc).
+- OCR/PDF storage with ChromaDB Vector Database (with an open source embedding model)
+- Flask app for API route handling
+- Simple HTML front end
 
 use of github copilot (GPT 5 mini)
 
