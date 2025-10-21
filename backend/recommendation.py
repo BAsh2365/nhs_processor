@@ -3,11 +3,8 @@ from __future__ import annotations
 import os, json
 from typing import List, Optional, Dict
 
-# LLM is optional
-try:
-    import anthropic
-except Exception:
-    anthropic = None
+import anthropic
+
 
 
 class ClinicalRecommendationEngine:
@@ -23,7 +20,6 @@ class ClinicalRecommendationEngine:
         self._init_error = None
         if self.anthropic_api_key and anthropic:
             try:
-                # If your httpx/httpcore are old, upgrade them as we discussed.
                 self._client = anthropic.Anthropic(api_key=self.anthropic_api_key)
             except Exception as e:
                 # Do not crash app; we’ll use fallbacks.
@@ -43,7 +39,7 @@ class ClinicalRecommendationEngine:
 
         style_instructions = {
             "exec": (
-                "Write a 2–4 line executive summary for a cardiothoracic surgeon. "
+                "Write a 3-5 line executive summary for a cardiothoracic surgeon. "
                 "Include: indication/reason for referral, key symptoms with duration/severity, functional capacity, "
                 "and the explicit ask. UK clinical wording, no PII."
             ),
@@ -53,19 +49,22 @@ class ClinicalRecommendationEngine:
             ),
             "concise": (
                 "Write a short surgeon-facing paragraph (5–7 lines) highlighting indication, key symptoms, "
-                "functional capacity and the ask. UK clinical wording, no PII."
+                "functional capacity and the ask. UK clinical wording from NHS/NICE, no PII."
             ),
         }.get(style, "Write a concise, surgeon-facing summary. UK clinical wording, no PII.")
 
         if self._client:
             try:
                 system = (
-                    "You are an NHS decision-support assistant for cardiology/cardiothoracic teams. "
-                    f"{style_instructions} Max {max_words} words. Do not invent facts."
+                    "You are an NHS decision-support assistant for cardiology/cardiothoracic teams with accurate and knowledgeable experience in catdiovascular/cardiothroacic pratices.
+                    f"{style_instructions}". Do not invent facts. Do not log/use personal information such as address, first name, phone number, etc. (via NHS standards)
+                    Use the exec style in style instuctions. Make sure to provide accurate clinical information from the
+                    knowledge base and NHS/NICE online resources only. Make sure to consider context of patient and nuance when evalutaing patient on NHS standards".
+                     
                 )
                 msg = self._client.messages.create(
-                    model="claude-3-5-sonnet-20241022",
-                    max_tokens=400,
+                    model = "claude-opus-4-1"
+                    max_tokens=500,
                     temperature=0.1,
                     system=system,
                     messages=[{"role": "user", "content": t}],
