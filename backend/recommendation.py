@@ -3,11 +3,8 @@ from __future__ import annotations
 import os, json
 from typing import List, Optional, Dict
 
-# LLM is optional
-try:
-    import anthropic
-except Exception:
-    anthropic = None
+import anthropic
+
 
 
 class ClinicalRecommendationEngine:
@@ -43,17 +40,17 @@ class ClinicalRecommendationEngine:
 
         style_instructions = {
             "exec": (
-                "Write a 2–4 line executive summary for a cardiothoracic surgeon. "
+                "Write a 3–5 line executive summary for a cardiothoracic surgeon. "
                 "Include: indication/reason for referral, key symptoms with duration/severity, functional capacity, "
-                "and the explicit ask. UK clinical wording, no PII."
+                "and the explicit ask. UK clinical wording, no PII. Based on NHS guidelines"
             ),
             "bullets": (
                 "Write a concise 3–5 bullet summary with bolded labels: Indication, Symptoms, Function, Request. "
-                "UK clinical wording, no PII."
+                "UK clinical wording, no PII. Based on NHS guidelines."
             ),
             "concise": (
                 "Write a short surgeon-facing paragraph (5–7 lines) highlighting indication, key symptoms, "
-                "functional capacity and the ask. UK clinical wording, no PII."
+                "functional capacity and the ask. UK clinical wording, no PII. Based on NHS guidelines"
             ),
         }.get(style, "Write a concise, surgeon-facing summary. UK clinical wording, no PII.")
 
@@ -61,10 +58,12 @@ class ClinicalRecommendationEngine:
             try:
                 system = (
                     "You are an NHS decision-support assistant for cardiology/cardiothoracic teams. "
-                    f"{style_instructions} Max {max_words} words. Do not invent facts."
-                )
+                    f"{style_instructions} You will use Exec style writing from these instructions. Do not invent facts."
+                    "You are very knowledgeable about cardiovascular and cardiothoracic surgeries within NHS standards." 
+                    "Use the Knowledge base PDFs to inform your summaries. Make sure that it adheres to DTAC guidelines."               
+                    )
                 msg = self._client.messages.create(
-                    model="claude-3-5-sonnet-20241022",
+                    model="claude-opus-4-1-20250805",
                     max_tokens=400,
                     temperature=0.1,
                     system=system,
@@ -89,59 +88,7 @@ class ClinicalRecommendationEngine:
                 break
             out.append(p); count += w
         return " ".join(out) if out else clean[: max_words * 6]
-
-    def generate_recommendation(self, text: str, context_snippets: Optional[List[Dict]] = None) -> Dict:
-        """
-        Returns a dict with keys:
-          - recommendation_type, urgency, suggested_timeframe, red_flags, confidence_level,
-            evidence_basis, reasoning
-        Urgency ∈ {EMERGENCY, URGENT, ROUTINE}
-        Uses Claude if available; otherwise heuristic fallback.
-        """
-        t = (text or "").strip()
-        if not t:
-            return self._fallback_recommendation(t)
-
-        if self._client:
-            try:
-                schema_hint = (
-                    "Return STRICT JSON with keys: recommendation_type, urgency, suggested_timeframe, "
-                    "red_flags, confidence_level, evidence_basis, reasoning. "
-                    "Urgency must be one of: EMERGENCY, URGENT, ROUTINE."
-                )
-                ctx = ""
-                if context_snippets:
-                    tops = []
-                    for item in context_snippets[:3]:
-                        meta = item.get("meta") or {}
-                        src = meta.get("title") or meta.get("source") or "kb"
-                        tops.append(f"[{src}] {item.get('text','')[:400]}")
-                    ctx = "\n\nKB context:\n" + "\n---\n".join(tops)
-
-                system = (
-                    "You are an NHS DTAC-aware assistant for cardiology/cardiothoracic teams. "
-                    "Provide conservative, guideline-aligned triage recommendations based on the letter. "
-                    "Prefer NICE CG95 (chest pain), NG185 (ACS), NG208 (valve disease), and the NHS England "
-                    "Adult Cardiac Surgery Service Specification. Do not invent facts."
-                )
-                user = f"Letter text:\n{t}\n{ctx}\n\n{schema_hint}\nReturn STRICT JSON only."
-                msg = self._client.messages.create(
-                    model="claude-3-5-sonnet-20241022",
-                    max_tokens=600,
-                    temperature=0.0,
-                    system=system,
-                    messages=[{"role": "user", "content": user}],
-                )
-                raw = (msg.content[0].text or "").strip()
-                rec = json.loads(raw)
-                if not isinstance(rec, dict) or not rec.get("urgency"):
-                    raise ValueError("LLM returned unusable JSON")
-                return rec
-            except Exception:
-                return self._fallback_recommendation(t)
-
-        return self._fallback_recommendation(t)
-
+    
     # ---------- FALLBACKS ----------
 
     def _fallback_recommendation(self, text: str) -> Dict:
@@ -198,3 +145,62 @@ class ClinicalRecommendationEngine:
     def fallback_recommendation(self, text: str) -> Dict:
         return self._fallback_recommendation(text)
 
+
+
+    def generate_recommendation(self, text: str, context_snippets: Optional[List[Dict]] = None) -> Dict:
+        """
+        Returns a dict with keys:
+          - recommendation_type, urgency, suggested_timeframe, red_flags, confidence_level,
+            evidence_basis, reasoning
+        Urgency ∈ {EMERGENCY, URGENT, ROUTINE}
+        Uses Claude if available; otherwise heuristic fallback.
+        """
+        t = (text or "").strip()
+        if not t:
+            return self._fallback_recommendation(t)
+
+        if self._client:
+            try:
+                schema_hint = (
+                    "Return STRICT JSON with keys: recommendation_type, urgency, suggested_timeframe, "
+                    "red_flags, confidence_level, evidence_basis, reasoning. Based on NHS standards for cardiology/cardiothoracic triage."
+                    "Urgency must adhere to NHS and NICE guidelines for cardiovasucular and throacic conditions. Under the NHS Constitution, if your GP refers you for a condition that's not urgent, you have the right to start treatment led by a consultant within 18 weeks from when you're referred, unless you want to wait longer or waiting longer is clinically right for you."
+                    "Main Urgency levels are: EMERGENCY (immediate action), URGENT (within 2-4 weeks), ROUTINE (standard outpatient review/recommendations to GP). Choose the most appropriate urgency based on the letter content and NHS guidelines as well as all other statistical knowledge and nuance of the patient's history. Make the output VERY neat."
+
+                )
+                ctx = ""
+                if context_snippets:
+                    tops = []
+                    for item in context_snippets[:3]:
+                        meta = item.get("meta") or {}
+                        src = meta.get("title") or meta.get("source") or "kb"
+                        tops.append(f"[{src}] {item.get('text','')[:400]}")
+                    ctx = "\n\nKB context:\n" + "\n---\n".join(tops)
+
+                system = (
+                    "You are an NHS DTAC-aware assistant for cardiology/cardiothoracic teams"
+                    "Provide conservative, guideline-aligned triage recommendations based on the letter"
+                    "Prefer NICE CG95 (chest pain), NG185 (ACS), NG208 (valve disease), and the NHS England"
+                    "Adult Cardiac Surgery Service Specification. Do not invent facts."
+                    "Please use Exec Style for reasoning. Make sure the summary of the letter is neat and contains the main points of the letter."
+                    "Use the Knowledge base PDFs to inform your recommendations. Make sure that it adheres to DTAC guidelines." \
+                    "Make sure that the output is neatly formatted and easy to read."
+                    
+                )
+                user = f"Letter text:\n{t}\n{ctx}\n\n{schema_hint}\nReturn STRICT JSON only."
+                msg = self._client.messages.create(
+                    model="claude-opus-4-1-20250805",
+                    max_tokens=600,
+                    temperature=0.0,
+                    system=system,
+                    messages=[{"role": "user", "content": user}],
+                )
+                raw = (msg.content[0].text or "").strip()
+                rec = json.loads(raw)
+                if not isinstance(rec, dict) or not rec.get("urgency"):
+                    raise ValueError("LLM returned unusable JSON")
+                return rec
+            except Exception:
+                return self._fallback_recommendation(t)
+
+        return self._fallback_recommendation(t)
