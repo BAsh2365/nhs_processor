@@ -28,7 +28,7 @@ python -m venv .venv; pip install -r requirements.txt
 python frontend\app.py
 
 
-Tech stack:
+# Tech stack
 
 Claude Opus API
 Python (adhering to DTAC NHS guidelines, model context, patient data types (usually strings), etc).
@@ -38,7 +38,7 @@ Simple HTML front end
 
 use of github copilot (GPT 5 mini)
 
-Future Improvements:
+# Future Improvements
 
 - Graph Database usage (for flexible storage and debugging)
 
