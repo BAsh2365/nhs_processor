@@ -48,6 +48,14 @@ use of github copilot (GPT 5 mini)
 
 - Human-in-the-loop nuance analysis based on patient history.
 
+# Ideal setup
+
+- Scaling deployment aspects (following DTAC rules with a Cloud setup on AWS, GC or Azure).
+
+- Needs to be containerized and scaled with docker so that each user has its own spun up instance. 
+
+- System design flushed out with a GitHub CI/CD pipeline, tests, etc.
+
 
 If you have any questions about this project, let me know! 
 
