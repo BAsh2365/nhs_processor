@@ -14,6 +14,7 @@ Privacy & Compliance
 - PII is redacted before any analysis and files are deleted after processing.
 - Patient identifiers are hashed using SHA-256 and only the hash is logged.
 - Audit logs contain only the hashed patient id.
+- AI Model's Knowledge base stems from NHS and NICE documentation.
 
 # Create virtualenv and install
 python -m venv .venv; pip install -r requirements.txt
