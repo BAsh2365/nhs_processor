@@ -64,3 +64,18 @@ use of github copilot (GPT 5 mini)
 If you have any questions about this project, let me know! (Email: Bhargab.ashok2023@gmail.com)
 
 
+# Guidelines 
+
+https://nhsdigital.github.io/rap-community-of-practice/introduction_to_RAP/levels_of_RAP/
+
+https://github.com/nhsx/open-source-policy/blob/main/open-source-policy.md#b-readmes
+
+Estimated RAP Level: Around Baseline (Hobby Project with public data/PDFs available on the internet).
+
+
+
+
+
+
+
+
