@@ -41,7 +41,7 @@ use of github copilot (GPT 5 mini)
 
 # Future Improvements
 
-- Graph Database usage (for flexible storage and debugging)
+- Graph/SQL Database usage (for flexible storage and debugging)
 
 - Larger Context Window, Temperature adjustment (randomness/creativity/nuance), for more accurate information
 
