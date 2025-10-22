@@ -1,6 +1,7 @@
-NHS Medical Document Processor for Cardiovascular Issues (NHS - DPCI) - Modularized Demo (MVP)
+NHS Medical Document Processor for Cardiovascular Issues (NHS - DPCI) - Modularized Demo (MVP) Note: I am NOT affiliated with the NHS. This is just a projext I have made using online, open sources PDFs and Guidelines from the NHS and NICE. 
 
-This workspace contains an MVP version of the NHS medical document processor demo. AI-code assisted project with Github Copilot (By Bhargav Ashok, used GPT 5 in VS Code IDE for this project). Still a Work in Progress.
+This workspace contains an MVP version of the NHS medical document processor demo. AI-code assisted project with Github Copilot (By Bhargav Ashok, used GPT 5 in VS Code IDE for this project). Still a Work in Progress. It is NOT a full fledged finished Product. 
+
 
 This AI tool is designed to assist cardiovascular surgeons within the NHS in the triage of referral letters received from GPs. These letters, often numbering in the hundreds or thousands, contain detailed patient histories and descriptions of current medical concerns. Traditionally, reviewing and prioritizing these referrals is a time-consuming task, often rotated among surgical teams.
 
@@ -60,6 +61,6 @@ use of github copilot (GPT 5 mini)
 - System design flushed out with a GitHub CI/CD pipeline, tests, etc.
 
 
-If you have any questions about this project, let me know! 
+If you have any questions about this project, let me know! (Email: Bhargab.ashok2023@gmail.com)
 
 
