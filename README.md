@@ -1,4 +1,4 @@
-NHS Medical Document Processor for Cardiovascular Issues (NHS - DPCI) - Modularized Demo (MVP) Note: I am NOT affiliated with the NHS. This is just a projext I have made using online, open sources PDFs and Guidelines from the NHS and NICE. 
+NHS Medical Document Processor for Cardiovascular Issues (NHS - DPCI) - Modularized Demo (MVP) Note: I am NOT affiliated with the NHS. This is just a project I have made using online, open sources PDFs and Guidelines from the NHS and NICE. 
 
 This workspace contains an MVP version of the NHS medical document processor demo. AI-code assisted project with Github Copilot (By Bhargav Ashok, used GPT 5 in VS Code IDE for this project). Still a Work in Progress. It is NOT a full fledged finished Product. It is a Personal Interest Project.
 
