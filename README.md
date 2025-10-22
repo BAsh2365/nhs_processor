@@ -43,15 +43,17 @@ use of github copilot (GPT 5 mini)
 
 - Graph Database usage (for flexible storage and debugging)
 
-- Larger Context Window for more accurate information
+- Larger Context Window, Temperature adjustment (randomness/creativity/nuance), for more accurate information
 
-- Accuracy in diagnosis with more specified guidelines instead of three simple levels
+- Accuracy in recommendation with more specified guidelines instead of three simple levels
 
-- Human-in-the-loop nuance analysis based on patient history.
+- Human-in-the-loop frameworks, tests, etc..
 
 # Ideal setup
 
 - Scaling deployment aspects (following DTAC rules with a Cloud setup on AWS, GC or Azure).
+
+- Data Engineering Pipeline with large scale data and tools like databricks, spark, etc. (potentially from an NHS NLP dataset: https://github.com/nhsx/language-corpus-tools)
 
 - Needs to be containerized and scaled with docker so that each user has its own spun up instance. 
 
