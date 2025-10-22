@@ -70,7 +70,9 @@ https://nhsdigital.github.io/rap-community-of-practice/introduction_to_RAP/level
 
 https://github.com/nhsx/open-source-policy/blob/main/open-source-policy.md#b-readmes
 
-Estimated RAP Level: Around Baseline (Hobby Project with public data/PDFs available on the internet).
+- Estimated RAP Level: Around Baseline (Hobby Project with public data/PDFs available on the internet).
+
+- Completion date for a "finished product" is undecided as it is a hobby project.
 
 
 
