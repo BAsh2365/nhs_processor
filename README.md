@@ -1,6 +1,6 @@
-NHS Medical Document Processor for Cardiovascular Issues (NHS - DPCI) - Modularized Demo (MVP) Note: I am NOT affiliated with the NHS. This is just a project I have made using online, open sources PDFs and Guidelines from the NHS and NICE. 
+NHS Medical Document Processor for Cardiovascular Issues (NHS - DPCI) - Modularized Demo (MVP) Note: I am NOT affiliated with the NHS. This is just a project I have made using online, open-source PDFs and Guidelines from the NHS and NICE. 
 
-This workspace contains an MVP version of the NHS medical document processor demo. AI-code assisted project with Github Copilot (By Bhargav Ashok, used GPT 5 in VS Code IDE for this project). Still a Work in Progress. It is NOT a full fledged finished Product. It is a Personal Interest Project.
+This workspace contains an MVP version of the NHS medical document processor demo. AI-code assisted project with Github Copilot (By Bhargav Ashok, used GPT 5 in VS Code IDE for this project). Still a Work in Progress. It is NOT a full-fledged finished Product. It is a Personal Interest Project.
 
 
 This AI tool is designed to assist cardiovascular surgeons within the NHS in the triage of referral letters received from GPs. These letters, often numbering in the hundreds or thousands, contain detailed patient histories and descriptions of current medical concerns. Traditionally, reviewing and prioritizing these referrals is a time-consuming task, often rotated among surgical teams.
@@ -25,9 +25,10 @@ python -m venv .venv; pip install -r requirements.txt
 - Claude API key
 - env configurations set for transformers if needed
 - env configurations for OCR PDF reading (Tesseract)
+- Every library in the requirements.txt file
 
 # Run frontend demo
-python frontend\app.py
+python frontend\app.py (feel free to clone the repo as well!)
 
 
 # Tech stack
@@ -54,9 +55,9 @@ use of github copilot (GPT 5 mini)
 
 - Scaling deployment aspects (following DTAC rules with a Cloud setup on AWS, GC or Azure).
 
-- Data Engineering Pipeline with large scale data and tools like databricks, spark, etc. (potentially from an NHS NLP dataset: https://github.com/nhsx/language-corpus-tools)
+- Data Engineering Pipeline with large-scale data and tools like databricks, spark, etc. (potentially from an NHS NLP dataset: https://github.com/nhsx/language-corpus-tools)
 
-- Needs to be containerized and scaled with docker so that each user has its own spun up instance. 
+- Needs to be containerized and scaled with docker so that each user has their own instance. 
 
 - System design flushed out with a GitHub CI/CD pipeline, tests, etc.
 
