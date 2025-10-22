@@ -62,11 +62,6 @@ use of github copilot (GPT 5 mini)
 - System design flushed out with a GitHub CI/CD pipeline, tests, etc.
 
 
-If you have any questions about this project, let me know! (Email: Bhargav.ashok2023@gmail.com)
-
-If you use this project please build upon it for the greater good of it's original intent. Feel free to clone the repo as well.
-
-
 # Guidelines 
 
 https://nhsdigital.github.io/rap-community-of-practice/introduction_to_RAP/levels_of_RAP/
@@ -78,7 +73,9 @@ https://github.com/nhsx/open-source-policy/blob/main/open-source-policy.md#b-rea
 - Completion date for a "finished product" is undecided as it is a hobby project.
 
 
+**If you have any questions about this project, let me know! (Email: Bhargav.ashok2023@gmail.com)**
 
+**If you use this project please build upon it for the greater good of its original intent. Feel free to work on this project, clone it, approve it, etc. Please cite the author of this Repo when doing so (Bhargav Ashok)**
 
 
 
