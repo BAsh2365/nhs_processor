@@ -75,7 +75,7 @@ https://github.com/nhsx/open-source-policy/blob/main/open-source-policy.md#b-rea
 
 **If you have any questions about this project, let me know! (Email: Bhargav.ashok2023@gmail.com)**
 
-**If you use this project please build upon it for the greater good of its original intent. Feel free to work on this project, clone it, approve it, etc. Please cite the author of this Repo when doing so (Bhargav Ashok)**
+**If you use this project please build upon it for the greater good of its original intent. Feel free to work on this project, clone it, understand it, improve it, etc. Please cite the author of this Repo when doing so (Bhargav Ashok)**
 
 
 
