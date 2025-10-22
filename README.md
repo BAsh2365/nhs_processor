@@ -61,7 +61,7 @@ use of github copilot (GPT 5 mini)
 - System design flushed out with a GitHub CI/CD pipeline, tests, etc.
 
 
-If you have any questions about this project, let me know! (Email: Bhargab.ashok2023@gmail.com)
+If you have any questions about this project, let me know! (Email: Bhargav.ashok2023@gmail.com)
 
 
 # Guidelines 
