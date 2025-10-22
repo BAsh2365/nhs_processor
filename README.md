@@ -17,7 +17,7 @@ Privacy & Compliance
 - Audit logs contain only the hashed patient id.
 - AI Model's Knowledge base stems from NHS and NICE documentation.
 
-# Create virtualenv and install
+# Create venv and install
 python -m venv .venv; pip install -r requirements.txt
 
 # You should have the following
@@ -74,6 +74,8 @@ https://github.com/nhsx/open-source-policy/blob/main/open-source-policy.md#b-rea
 - Estimated RAP Level: Around Baseline (Hobby Project with public data/PDFs available on the internet).
 
 - Completion date for a "finished product" is undecided as it is a hobby project.
+
+- Under MIT license 
 
 
 
