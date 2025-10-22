@@ -28,7 +28,7 @@ python -m venv .venv; pip install -r requirements.txt
 - Every library in the requirements.txt file
 
 # Run frontend demo
-python frontend\app.py (feel free to clone the repo as well!)
+python frontend\app.py 
 
 
 # Tech stack
@@ -64,6 +64,8 @@ use of github copilot (GPT 5 mini)
 
 If you have any questions about this project, let me know! (Email: Bhargav.ashok2023@gmail.com)
 
+If you use this project please build upon it for the greater good of it's original intent. Feel free to clone the repo as well.
+
 
 # Guidelines 
 
@@ -74,8 +76,6 @@ https://github.com/nhsx/open-source-policy/blob/main/open-source-policy.md#b-rea
 - Estimated RAP Level: Around Baseline (Hobby Project with public data/PDFs available on the internet).
 
 - Completion date for a "finished product" is undecided as it is a hobby project.
-
-- Under MIT license 
 
 
 
