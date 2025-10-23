@@ -1,6 +1,8 @@
-NHS Medical Document Processor for Cardiovascular Issues (NHS - DPCI) - Modularized Demo (MVP) Note: I am NOT affiliated with the NHS. This is just a project I have made using online, open-source PDFs and Guidelines from the NHS and NICE. 
+NHS Medical Document Processor Framework for Cardiovascular Issues (NHS Personal Project/Framework  - DPCI) - Modularized Demo (MVP) 
 
-This workspace contains an MVP version of the NHS medical document processor demo. AI-code assisted project with Github Copilot (By Bhargav Ashok, used GPT 5 in VS Code IDE for this project). Still a Work in Progress. It is NOT a full-fledged finished Product. It is a Personal Interest Project.
+**Note: I am NOT affiliated with the NHS. This is just a project I have made using online, open-source PDFs and Guidelines from the NHS and NICE. It is a framework for my thought process in how to use AI within Medical systems (considering ethical implications, technology guidelines, and other confounding factors).**
+
+This workspace contains an MVP version of the NHS medical document processor demo. AI-code assisted project with Github Copilot (By Bhargav Ashok, used GPT 5 in VS Code IDE for this project). Still a Work in Progress. It is NOT a full-fledged finished Product. It is a Personal Interest Project/Framework as stated above.
 
 
 This AI tool is designed to assist cardiovascular surgeons within the NHS in the triage of referral letters received from GPs. These letters, often numbering in the hundreds or thousands, contain detailed patient histories and descriptions of current medical concerns. Traditionally, reviewing and prioritizing these referrals is a time-consuming task, often rotated among surgical teams.
@@ -73,7 +75,7 @@ https://github.com/nhsx/open-source-policy/blob/main/open-source-policy.md#b-rea
 - Completion date for a "finished product" is undecided as it is a hobby project.
 
 
-**If you have any questions about this project, let me know! (Email: Bhargav.ashok2023@gmail.com)**
+**If you have any questions about this framework project, let me know! (Email: Bhargav.ashok2023@gmail.com)**
 
 **If you use this project please build upon it for the greater good of its original intent. Feel free to work on this project, clone it, understand it, improve it, etc. Please cite the author of this Repo when doing so (Bhargav Ashok)**
 
