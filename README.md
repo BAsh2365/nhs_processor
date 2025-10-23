@@ -13,24 +13,25 @@ Structure:
 - backend/: core processing modules (anonymizer, pdf parsing, risk assessor, recommendation engine, processor)
 - frontend/: Flask app and template for uploading PDFs
 
-Privacy & Compliance
-- PII is redacted before any analysis and files are deleted after processing.
-- Patient identifiers are hashed using SHA-256 and only the hash is logged.
-- Audit logs contain only the hashed patient id.
+Privacy & Compliance:
+- PII is redacted before any analysis or patient files are deleted after processing.
+- Patient identifiers are hashed using SHA-256. Only the hash is logged.
+- Audit logs contain only the hashed patient id (Not shown here but will pop up once the project is running).
 - AI Model's Knowledge base stems from NHS and NICE documentation.
 
 # Create venv and install
 python -m venv .venv; pip install -r requirements.txt
 
-# You should have the following
+# You should have the following 
 
 - Claude API key
 - env configurations set for transformers if needed
 - env configurations for OCR PDF reading (Tesseract)
 - Every library in the requirements.txt file
 
-# Run frontend demo
-python frontend\app.py 
+# Run frontend demo (Via VS code CLI ir similar)
+use $env and input the following information (Claude API key, location of OCR library)
+Run python frontend\app.py OR similar 
 
 
 # Tech stack
