@@ -1,6 +1,6 @@
 NHS Medical Document Processor Framework for Cardiovascular Issues (NHS Personal Project/Framework  - DPCI) - Modularized Demo (MVP) 
 
-**Note: I am NOT affiliated with the NHS. This is just a project I have made using online, open-source PDFs and Guidelines from the NHS and NICE. It is a framework for my thought process in how to use AI within Medical systems (considering ethical implications, technology guidelines, and other confounding factors).**
+**Note: I am NOT affiliated with the NHS. This is just a project I have made using online, open-source PDFs and Guidelines from the NHS and NICE. It is a framework for my thought process in how to use AI within Medical systems (considering ethical implications, technology guidelines, and other confounding factors, results still need to be fine tuned, it is NOT COMPLETE, it is NOT completely Fool proof/tested, it is an unfinished idea/framework).**
 
 This workspace contains an MVP version of the NHS medical document processor demo. AI-code assisted project with Github Copilot (By Bhargav Ashok, used GPT 5 in VS Code IDE for this project). Still a Work in Progress. It is NOT a full-fledged finished Product. It is a Personal Interest Project/Framework as stated above.
 
