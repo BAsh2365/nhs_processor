@@ -385,6 +385,11 @@ def api_analyze():
 
         result = PROCESSOR.process_document(io.BytesIO(pdf_bytes), patient_identifier=patient_id)
         status = 200 if result.get("success") else 500
+        if not result.get("success"):
+            # Prevent exposure of backend exception details
+            safe_result = dict(result)
+            safe_result["error"] = "An internal error occurred."
+            return jsonify(safe_result), status
         return jsonify(result), status
 
     except Exception as e:
