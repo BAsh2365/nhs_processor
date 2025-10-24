@@ -102,6 +102,6 @@ class MedicalDocumentProcessor:
             self.logger.log_error("MedicalDocumentProcessor", patient_id_hash, str(exc))
             return {
                 "success": False,
-                "error": str(exc),
+                "error": "An internal error occurred.",
                 "patient_data": patient_meta
             }
