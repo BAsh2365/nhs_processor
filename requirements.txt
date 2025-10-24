@@ -1,7 +1,7 @@
 
 # Web Framework
 Flask==3.0.0
-Werkzeug==3.0.1
+Werkzeug>=3.0.6
 
 # PDF Processing
 pypdf==3.17.4
