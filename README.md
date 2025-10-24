@@ -18,6 +18,7 @@ Privacy & Compliance:
 - Patient identifiers are hashed using SHA-256. Only the hash is logged.
 - Audit logs contain only the hashed patient ID (Not shown here, but will pop up once the project is running).
 - AI Model's Knowledge base stems from NHS and NICE documentation.
+- GitHub Workflows include Security Checks to combat any security issues with library vulnerabilities. 
 
 # Create venv and install
 python -m venv .venv; pip install -r requirements.txt
