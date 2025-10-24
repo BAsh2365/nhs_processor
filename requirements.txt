@@ -14,7 +14,7 @@ spacy==3.7.5
 transformers==4.36.2
 tokenizers==0.15.0
 sentence-transformers==2.2.2
-torch==2.1.2
+torch==2.8.0
 huggingface-hub==0.20.2
 
 # Vector Database
