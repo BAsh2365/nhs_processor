@@ -1,40 +1,430 @@
-<!-- ...existing code... -->
-<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>NHS Medical Document Processor (Demo)</title>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NHS Medical Document Processor</title>
     <style>
-      body { font-family: Arial, sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; color: #222; }
-      header { display:flex; align-items:center; gap:16px; }
-      h1 { margin:0; font-size:1.6rem; }
-      form { margin-top:20px; background:#fafafa; border:1px solid #eee; padding:18px; border-radius:8px; }
-      label { display:block; margin-bottom:6px; font-weight:600; }
-      input[type="text"], input[type="file"] { width:100%; padding:8px; margin-bottom:12px; box-sizing:border-box; }
-      button { background:#0078d4; color:#fff; border:none; padding:10px 14px; border-radius:6px; cursor:pointer; }
-      .note { color:#555; margin-top:8px; }
-      .message { margin-top:12px; padding:10px; background:#fff4e5; border:1px solid #ffd7a6; border-radius:6px; color:#6a4b00; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #005EB8 0%, #003087 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .nhs-logo {
+            color: #005EB8;
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            color: #212B32;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #425563;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .warning-box {
+            background: #FFF4E5;
+            border-left: 4px solid #FF8800;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .warning-box strong {
+            color: #FF8800;
+        }
+
+        .upload-section {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .upload-area {
+            border: 3px dashed #005EB8;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            background: #F0F4F5;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .upload-area:hover {
+            background: #E8EDEE;
+            border-color: #003087;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            color: #005EB8;
+            margin-bottom: 20px;
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        .file-label {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #005EB8;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+
+        .file-label:hover {
+            background: #003087;
+        }
+
+        .file-name {
+            margin-top: 15px;
+            color: #425563;
+            font-size: 14px;
+        }
+
+        .process-btn {
+            width: 100%;
+            padding: 15px;
+            background: #007F3B;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background 0.3s;
+        }
+
+        .process-btn:hover:not(:disabled) {
+            background: #00632E;
+        }
+
+        .process-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #005EB8;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results {
+            display: none;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .result-section {
+            margin-bottom: 25px;
+            padding-bottom: 25px;
+            border-bottom: 1px solid #E8EDEE;
+        }
+
+        .result-section:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            font-weight: bold;
+            color: #212B32;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .urgency-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .urgency-emergency {
+            background: #DA291C;
+            color: white;
+        }
+
+        .urgency-urgent {
+            background: #FF8800;
+            color: white;
+        }
+
+        .urgency-routine {
+            background: #007F3B;
+            color: white;
+        }
+
+        .red-flags {
+            background: #FFF4E5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        .red-flag-item {
+            padding: 5px 0;
+            color: #DA291C;
+        }
+
+        .red-flag-item:before {
+            content: "⚠ ";
+        }
+
+        .error {
+            display: none;
+            background: #FFF4E5;
+            border-left: 4px solid #DA291C;
+            padding: 20px;
+            border-radius: 5px;
+            color: #DA291C;
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 30px;
+            font-size: 14px;
+        }
     </style>
-  </head>
-  <body>
-    <header>
-      <h1>NHS Medical Document Processor</h1>
-    </header>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="nhs-logo">NHS</div>
+            <h1>Medical Document Processor</h1>
+            <p class="subtitle">AI-Powered Cardiovascular Referral Triage System</p>
+            
+            <div class="warning-box">
+                <strong>⚠ IMPORTANT:</strong> This is a demonstration framework for research purposes only. 
+                NOT for clinical use. All recommendations require validation by qualified healthcare professionals.
+            </div>
+        </div>
 
-    <p class="note">This demo anonymises uploaded PDFs and provides a clinical recommendation. No PII is stored. Files are removed immediately after processing.</p>
+        <!-- Upload Section -->
+        <div class="upload-section">
+            <h2 style="margin-bottom: 20px; color: #212B32;">Upload Referral Letter</h2>
+            
+            <div class="upload-area" onclick="document.getElementById('file-input').click()">
+                <div class="upload-icon">📄</div>
+                <label for="file-input" class="file-label">Choose File</label>
+                <input type="file" id="file-input" accept=".pdf,.txt">
+                <div class="file-name" id="file-name">No file chosen</div>
+                <p style="margin-top: 15px; color: #768692; font-size: 14px;">
+                    Supported formats: PDF, TXT
+                </p>
+            </div>
 
-    {% if message %}
-      <div class="message">{{ message }}</div>
-    {% endif %}
+            <button class="process-btn" id="process-btn" disabled>Process Document</button>
+        </div>
 
-    <form action="/upload" method="post" enctype="multipart/form-data">
-      <label for="patient_id">Patient ID (optional):</label>
-      <input type="text" id="patient_id" name="patient_id" placeholder="Optional identifier">
+        <!-- Loading -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p style="color: #005EB8; font-size: 18px;">Processing document...</p>
+            <p style="color: #768692; margin-top: 10px;">This may take a few moments</p>
+        </div>
 
-      <label for="file">Upload PDF</label>
-      <input type="file" id="file" name="file" accept="application/pdf">
+        <!-- Error -->
+        <div class="error" id="error">
+            <strong>Error:</strong> <span id="error-message"></span>
+        </div>
 
-      <button type="submit">Upload & Analyse</button>
-    </form>
-  </body>
+        <!-- Results -->
+        <div class="results" id="results">
+            <h2 style="margin-bottom: 20px; color: #212B32;">Triage Results</h2>
+            
+            <div class="result-section">
+                <div class="result-label">Clinical Summary</div>
+                <div id="summary" style="color: #425563; line-height: 1.6;"></div>
+            </div>
+
+            <div class="result-section">
+                <div class="result-label">Urgency Classification</div>
+                <span id="urgency-badge" class="urgency-badge"></span>
+                <div id="timeframe" style="color: #425563; margin-top: 10px;"></div>
+            </div>
+
+            <div class="result-section" id="red-flags-section" style="display: none;">
+                <div class="result-label">Red Flags Identified</div>
+                <div class="red-flags" id="red-flags"></div>
+            </div>
+
+            <div class="result-section">
+                <div class="result-label">Evidence Basis</div>
+                <div id="evidence" style="color: #425563; line-height: 1.6;"></div>
+            </div>
+
+            <div class="result-section">
+                <div class="result-label">Clinical Reasoning</div>
+                <div id="reasoning" style="color: #425563; line-height: 1.6;"></div>
+            </div>
+
+            <button class="process-btn" onclick="location.reload()">Process Another Document</button>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>NHS Medical Document Processor Framework (MVP)</p>
+            <p style="margin-top: 5px; font-size: 12px;">Using Local AI Models • NHS Compliant • No External APIs</p>
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('file-input');
+        const fileName = document.getElementById('file-name');
+        const processBtn = document.getElementById('process-btn');
+        const loading = document.getElementById('loading');
+        const results = document.getElementById('results');
+        const error = document.getElementById('error');
+
+        // Handle file selection
+        fileInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                fileName.textContent = this.files[0].name;
+                processBtn.disabled = false;
+            } else {
+                fileName.textContent = 'No file chosen';
+                processBtn.disabled = true;
+            }
+        });
+
+        // Handle form submission
+        processBtn.addEventListener('click', async function() {
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            // Hide previous results/errors
+            results.style.display = 'none';
+            error.style.display = 'none';
+            
+            // Show loading
+            loading.style.display = 'block';
+            processBtn.disabled = true;
+
+            // Create form data
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                // Send request
+                const response = await fetch('/process', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                // Hide loading
+                loading.style.display = 'none';
+
+                if (data.status === 'success') {
+                    // Display results
+                    displayResults(data);
+                } else {
+                    // Display error
+                    showError(data.error || 'Unknown error occurred');
+                }
+            } catch (err) {
+                loading.style.display = 'none';
+                showError('Failed to process document: ' + err.message);
+            }
+        });
+
+        function displayResults(data) {
+            // Summary
+            document.getElementById('summary').textContent = data.summary;
+
+            // Urgency
+            const urgency = data.recommendation.urgency;
+            const badge = document.getElementById('urgency-badge');
+            badge.textContent = urgency;
+            badge.className = 'urgency-badge urgency-' + urgency.toLowerCase();
+
+            // Timeframe
+            document.getElementById('timeframe').textContent = data.recommendation.suggested_timeframe;
+
+            // Red flags
+            const redFlags = data.recommendation.red_flags || [];
+            if (redFlags.length > 0) {
+                document.getElementById('red-flags-section').style.display = 'block';
+                const redFlagsDiv = document.getElementById('red-flags');
+                redFlagsDiv.innerHTML = redFlags.map(flag => 
+                    `<div class="red-flag-item">${flag}</div>`
+                ).join('');
+            }
+
+            // Evidence
+            document.getElementById('evidence').textContent = data.recommendation.evidence_basis;
+
+            // Reasoning
+            document.getElementById('reasoning').textContent = data.recommendation.reasoning;
+
+            // Show results
+            results.style.display = 'block';
+            results.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function showError(message) {
+            document.getElementById('error-message').textContent = message;
+            error.style.display = 'block';
+            processBtn.disabled = false;
+        }
+    </script>
+</body>
 </html>

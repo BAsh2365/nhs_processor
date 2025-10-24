@@ -1,107 +1,175 @@
-# backend/processor.py
-from typing import Dict, Optional, List, Union, IO
-from datetime import datetime
+# backend/processor.py - UPDATED
 
-from .anonymizer import DataAnonymizer
+import os
+from typing import Optional, Dict, List
+from .anonymizer import Anonymizer
 from .pdf_processor import PDFProcessor
 from .recommendation import ClinicalRecommendationEngine
-from .logger import NHSComplianceLogger
-from .models import PatientData, ClinicalRecommendation  # keep import even if not used directly
-
+from .risk_assessor import CardiovascularRiskAssessor
+try:
+    from . import kb_chroma as kb
+except ImportError:
+    import kb_chroma as kb
 
 class MedicalDocumentProcessor:
     """
-    PDF (bytes/IO) -> text extraction (+OCR if available) -> PII redaction -> normalization
-    -> AI summary (Claude if available, else extractive) -> recommendation (Claude or fallback)
-    -> structured result for the frontend.
+    Main processor for NHS medical documents
+    Uses local models - NHS compliant, no external APIs
     """
-
-    def __init__(self, api_key: Optional[str] = None, user_id: str = "SYSTEM"):
-        self.anonymizer = DataAnonymizer()
-        self.pdf_processor = PDFProcessor()
-        self.engine = ClinicalRecommendationEngine(anthropic_api_key=api_key)
-        self.logger = NHSComplianceLogger()
+    
+    def __init__(self, user_id: str = "DEFAULT_USER", use_gpu: bool = None):
+        """
+        Initialize the processor with local models only
+        
+        Args:
+            user_id: Identifier for audit logging
+            use_gpu: Whether to use GPU (None = auto-detect)
+        """
         self.user_id = user_id
-
-    def _normalize_text(self, text: str) -> str:
-        text = (text or "").replace("\x00", " ").strip()
-        return " ".join(text.split())
-
-    def process_document(self, file_obj: IO[bytes], patient_identifier: str) -> Dict[str, Union[bool, Dict, str, List]]:
-        processing_date = datetime.now().isoformat()
-        patient_id_hash = self.anonymizer.hash_patient_id(patient_identifier)
-
-        # Access log
-        self.logger.log_access(
-            action="DOCUMENT_UPLOAD",
-            patient_id_hash=patient_id_hash,
-            user_id=self.user_id,
-            details="processor=MedicalDocumentProcessor"
-        )
-
-        # Patient metadata (dict so it's JSON-serialisable)
-        patient_meta: Dict[str, str] = {
-            "patient_id_hash": patient_id_hash,
-            "processing_date": processing_date,
-            "document_type": "CLINICAL_DOCUMENT",
-        }
-
+        self.anonymizer = Anonymizer()
+        
+        # Initialize local model engine (no API key needed!)
+        print("[NHS-AI] Initializing local medical models...")
+        self.engine = ClinicalRecommendationEngine(use_gpu=use_gpu)
+        
+        # Initialize risk assessor
+        self.risk_assessor = CardiovascularRiskAssessor()
+        
+        print("[NHS-AI] Processor ready with local models")
+    
+    def process_document(self, pdf_path: str) -> Dict:
+        """
+        Process a medical referral document
+        
+        Args:
+            pdf_path: Path to the PDF document
+            
+        Returns:
+            Dictionary containing processed results
+        """
         try:
-            # 1) Extract text (prefer OCR if your PDFProcessor supports it)
-            try:
-                extracted = self.pdf_processor.extract_text_from_uploaded_file(file_obj, use_ocr=True)  # type: ignore
-            except TypeError:
-                extracted = self.pdf_processor.extract_text_from_uploaded_file(file_obj)
-
-            full_text = extracted or ""
-            # 2) Redact & normalize
-            redacted = self.anonymizer.redact_pii(full_text)
-            normalized_text = self._normalize_text(redacted)
-
-            # 3) AI summary (Claude if key set; else extractive fallback)
-            text_for_ai = normalized_text or full_text or ""
-            try:
-                ai_summary = self.engine.summarize(text_for_ai, max_words=140, style="exec") if text_for_ai else ""
-            except Exception as e:
-                self.logger.log_error("SummaryEngine", patient_id_hash, f"summary failed: {e}")
-                ai_summary = ""
-
-            # ALWAYS define normalized_excerpt for the UI
-            normalized_excerpt = ai_summary or (normalized_text or full_text or "")
-
-            # 4) Optional KB retrieval (never fail if KB is offline)
-            kb_hits: List[Dict] = []
-            try:
-                from . import kb_chroma as kb
-                if hasattr(kb, "query"):
-                    kb_hits = kb.query("cardiac surgery referral criteria and ACS triage", k=3) or []
-            except Exception as e:
-                self.logger.log_error("KB", patient_id_hash, f"kb retrieval failed: {e}")
-                kb_hits = []
-
-            # 5) Recommendation (Claude if available; else safe heuristic)
-            try:
-                recommendation: Dict = self.engine.generate_recommendation(
-                    text_for_ai or normalized_excerpt, context_snippets=kb_hits
-                )
-            except Exception as e:
-                self.logger.log_error("RecEngine", patient_id_hash, f"recommendation failed: {e}")
-                recommendation = self.engine.fallback_recommendation(text_for_ai or normalized_excerpt)
-
-            # 6) Return structured result
-            result: Dict[str, Union[bool, Dict, str, List]] = {
-                "success": True,
-                "normalized_excerpt": normalized_excerpt,   # shown as “Letter summary”
-                "patient_data": patient_meta,
+            # 1. Extract text from PDF
+            print(f"[NHS-AI] Extracting text from: {pdf_path}")
+            text = PDFProcessor.extract_text_from_pdf(pdf_path)
+            
+            if not text or len(text.strip()) < 50:
+                raise ValueError("Insufficient text extracted from PDF")
+            
+            print(f"[NHS-AI] Extracted {len(text)} characters")
+            
+            # 2. Anonymize the text
+            print("[NHS-AI] Anonymizing patient data...")
+            anonymized_text, patient_hash = self.anonymizer.anonymize(text)
+            
+            # 3. Query knowledge base for relevant context
+            print("[NHS-AI] Querying knowledge base...")
+            kb_results = kb.query(anonymized_text, k=3)
+            
+            # 4. Risk assessment
+            print("[NHS-AI] Assessing clinical risk...")
+            urgency, red_flags = self.risk_assessor.assess_urgency(anonymized_text)
+            
+            # 5. Generate clinical summary
+            print("[NHS-AI] Generating clinical summary...")
+            summary = self.engine.summarize(
+                anonymized_text, 
+                max_words=150, 
+                style="exec"
+            )
+            
+            # 6. Generate recommendation
+            print("[NHS-AI] Generating clinical recommendation...")
+            recommendation = self.engine.generate_recommendation(
+                anonymized_text,
+                context_snippets=kb_results
+            )
+            
+            # 7. Combine results
+            result = {
+                "status": "success",
+                "patient_id_hash": patient_hash,
+                "summary": summary,
+                "risk_assessment": {
+                    "urgency": urgency,
+                    "red_flags": red_flags
+                },
                 "recommendation": recommendation,
+                "knowledge_base_refs": len(kb_results),
+                "text_length": len(text),
+                "processing_notes": [
+                    "Processed using local NHS-compliant models",
+                    "No external API calls made",
+                    "Patient data anonymized before processing"
+                ]
             }
+            
+            # Audit log (only hash, no PII)
+            print(f"[AUDIT] Processed document for patient hash: {patient_hash[:16]}...")
+            
             return result
-
-        except Exception as exc:
-            # Any unexpected pipeline error — log and return a clear message
-            self.logger.log_error("MedicalDocumentProcessor", patient_id_hash, str(exc))
+            
+        except Exception as e:
+            print(f"[ERROR] Processing failed: {e}")
+            import traceback
+            traceback.print_exc()
+            
             return {
-                "success": False,
-                "error": str(exc),
-                "patient_data": patient_meta
+                "status": "error",
+                "error": str(e),
+                "details": "Document processing failed"
+            }
+    
+    def process_text(self, text: str) -> Dict:
+        """
+        Process raw text (for testing or text file uploads)
+        
+        Args:
+            text: Raw medical text
+            
+        Returns:
+            Dictionary containing processed results
+        """
+        try:
+            if not text or len(text.strip()) < 50:
+                raise ValueError("Insufficient text provided")
+            
+            # Anonymize
+            anonymized_text, patient_hash = self.anonymizer.anonymize(text)
+            
+            # Query KB
+            kb_results = kb.query(anonymized_text, k=3)
+            
+            # Risk assessment
+            urgency, red_flags = self.risk_assessor.assess_urgency(anonymized_text)
+            
+            # Generate summary
+            summary = self.engine.summarize(anonymized_text, max_words=150)
+            
+            # Generate recommendation
+            recommendation = self.engine.generate_recommendation(
+                anonymized_text,
+                context_snippets=kb_results
+            )
+            
+            result = {
+                "status": "success",
+                "patient_id_hash": patient_hash,
+                "summary": summary,
+                "risk_assessment": {
+                    "urgency": urgency,
+                    "red_flags": red_flags
+                },
+                "recommendation": recommendation,
+                "knowledge_base_refs": len(kb_results)
+            }
+            
+            print(f"[AUDIT] Processed text for patient hash: {patient_hash[:16]}...")
+            
+            return result
+            
+        except Exception as e:
+            print(f"[ERROR] Text processing failed: {e}")
+            return {
+                "status": "error",
+                "error": str(e)
             }

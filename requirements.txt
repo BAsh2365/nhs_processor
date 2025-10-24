@@ -1,16 +1,29 @@
+
+# Web Framework
 Flask==3.0.0
-PyPDF2==3.0.1
+Werkzeug==3.0.1
+
+# PDF Processing
+pypdf==3.17.4
+pymupdf==1.23.8
+pdf2image==1.16.3
+pytesseract==0.3.10
+Pillow==10.1.0
+
+# NLP & ML - Local Models Only (NHS Compliant)
 spacy==3.7.5
-anthropic==0.35.0
-chromadb==0.5.23
-transformers==4.41.2
-tokenizers==0.19.1
+transformers==4.36.2
+tokenizers==0.15.0
 sentence-transformers==2.2.2
-huggingface_hub
-torch
-pymupdf 
-pdf2image 
-pytesseract 
-pillow
+torch==2.1.2
+huggingface-hub==0.20.2
+sacremoses==0.1.1  # <-- ADD THIS LINE
 
+# Vector Database
+chromadb==0.4.22
 
+# Environment & Configuration
+python-dotenv==1.0.0
+
+# Optional: Accelerate for faster model loading
+accelerate==0.25.0

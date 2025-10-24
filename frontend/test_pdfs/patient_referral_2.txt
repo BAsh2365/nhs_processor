@@ -1,0 +1,56 @@
+URGENT REFERRAL
+
+Patient: Jane Doe (ANONYMIZED)
+DOB: 22/07/1972
+NHS Number: 987 654 3210
+
+Date: 23/10/2025
+
+URGENT CARDIOTHORACIC REFERRAL
+
+53-year-old lady presenting with crescendo angina.
+
+HISTORY:
+- Known stable angina for 2 years
+- Sudden deterioration over past week
+- Now experiencing chest pain at rest
+- Episodes lasting 15-20 minutes
+- Multiple episodes daily
+- GTN providing minimal relief
+- Episode this morning lasted 30 minutes with sweating
+
+RISK FACTORS:
+- Current smoker (15/day)
+- Hypertension
+- Obesity (BMI 33)
+- Family history: Mother MI age 55
+
+CURRENT MEDICATIONS:
+- Bisoprolol 5mg OD
+- Aspirin 75mg OD
+- Atorvastatin 40mg
+- GTN spray
+
+TODAY'S EXAMINATION:
+- BP: 165/95
+- Pulse: 88/min regular
+- Mild peripheral edema
+- No signs of heart failure currently
+
+ECG TODAY:
+- Sinus rhythm
+- T wave inversion in leads II, III, aVF
+- No ST elevation
+
+TROPONIN: 
+- Negative (taken 4 hours after last episode)
+
+IMPRESSION:
+Probable unstable angina / high-risk ACS
+Requires urgent assessment
+
+REQUEST:
+URGENT assessment - within 2 weeks as per NICE NG185
+Please advise on management
+
+Dr. B. Patel

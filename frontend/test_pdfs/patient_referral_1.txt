@@ -1,0 +1,56 @@
+PATIENT REFERRAL LETTER
+
+Patient Name: John Smith (ANONYMIZED)
+DOB: 15/03/1965
+NHS Number: 123 456 7890
+
+Date: 23/10/2025
+
+Dear Cardiothoracic Surgery Team,
+
+I am referring this 58-year-old gentleman with a 3-month history of worsening 
+chest pain on exertion. 
+
+PRESENTING COMPLAINT:
+- Central chest pain, radiating to left arm
+- Occurs on walking more than 100 yards
+- Associated with breathlessness
+- Relieved by rest within 5 minutes
+- No pain at rest currently
+
+PAST MEDICAL HISTORY:
+- Type 2 Diabetes (diagnosed 2018)
+- Hypertension (diagnosed 2015)
+- Hypercholesterolemia
+- Ex-smoker (quit 2020, 30 pack-year history)
+
+MEDICATIONS:
+- Metformin 500mg BD
+- Ramipril 10mg OD
+- Atorvastatin 80mg ON
+- Aspirin 75mg OD
+- GTN spray PRN
+
+EXAMINATION:
+- BP: 145/85 mmHg
+- HR: 78 bpm regular
+- BMI: 31
+- Heart sounds normal, no murmurs
+- Chest clear
+
+INVESTIGATIONS:
+- ECG: Sinus rhythm, no acute changes
+- Recent HbA1c: 7.2%
+- Cholesterol: 4.5 mmol/L
+
+IMPRESSION:
+Likely stable angina, CCS Class II
+Strong family history of IHD (father died age 62 from MI)
+
+REQUEST:
+Please assess for coronary artery disease.
+Urgent outpatient assessment requested.
+
+Yours sincerely,
+Dr. A. Williams
+GP Partner
