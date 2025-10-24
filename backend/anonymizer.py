@@ -47,7 +47,7 @@ def anonymize_text(text: str) -> Tuple[str, str]:
             if len(line) > 10 and len(line) < 100:
                 # Use first substantial line as ID
                 patient_id = line[:50]  # Limit length
-                print(f"[Anonymizer] Using first line as ID: {patient_id[:20]}...")
+                # Do not log cleartext of fallback patient_id
                 break
     
     # Anonymize the text by replacing identifiable information
