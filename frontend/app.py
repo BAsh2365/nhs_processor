@@ -388,9 +388,12 @@ def api_analyze():
         status = 200 if result.get("success") else 500
         if not result.get("success"):
             # Prevent exposure of backend exception details
-            safe_result = dict(result)
-            safe_result["error"] = "An internal error occurred."
-            return jsonify(safe_result), status
+            # Return only a minimal error object (avoid copying result which may contain sensitive info)
+            resp = {"success": False, "error": "An internal error occurred."}
+            # Optionally include patient_data if present and known safe
+            if "patient_data" in result:
+                resp["patient_data"] = result["patient_data"]
+            return jsonify(resp), status
         return jsonify(result), status
 
     except Exception as e:
