@@ -23,7 +23,7 @@ def anonymize_text(text: str) -> Tuple[str, str]:
     nhs_match = re.search(r'NHS\s*Number:?\s*(\d{3}\s*\d{3}\s*\d{4})', text, re.IGNORECASE)
     if nhs_match:
         patient_id = nhs_match.group(1).replace(' ', '')
-        print(f"[Anonymizer] Found NHS Number: {patient_id[:3]}***{patient_id[-3:]}")
+        print("[Anonymizer] Found NHS Number: [REDACTED]")
     
     # Pattern 2: Patient Name
     if patient_id == "UNKNOWN":
