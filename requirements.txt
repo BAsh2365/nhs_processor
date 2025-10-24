@@ -1,16 +1,15 @@
-Flask
-PyPDF2
-spacy
-anthropic
-chromadb
-transformers
-tokenizers
-sentence-transformers
+Flask==3.0.0
+PyPDF2==3.0.1
+spacy==3.7.5
+anthropic==0.35.0
+chromadb==0.5.23
+transformers==4.41.2
+tokenizers==0.19.1
+sentence-transformers==2.2.2
 huggingface_hub
 torch
 pymupdf 
 pdf2image 
 pytesseract 
 pillow
-
 
