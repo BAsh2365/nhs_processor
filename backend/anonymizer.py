@@ -36,7 +36,8 @@ def anonymize_text(text: str) -> Tuple[str, str]:
             name_match = re.search(pattern, text, re.IGNORECASE)
             if name_match:
                 patient_id = name_match.group(1).strip()
-                print(f"[Anonymizer] Found Name: {patient_id}")
+                # print(f"[Anonymizer] Found Name: {patient_id}")  # Avoid logging the name in clear text
+                print("[Anonymizer] Found Name: [REDACTED]")
                 break
     
     # Pattern 3: Use first line if still unknown
