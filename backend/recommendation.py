@@ -122,6 +122,7 @@ class ClinicalRecommendationEngine:
                 "3–5 line executive summary for a cardiothoracic surgeon. "
                 "Include: indication/reason for referral, key symptoms with duration/severity, functional capacity, "
                 "and the explicit ask. UK clinical wording, no PII. Based on NHS guidelines"
+                "and the explicit ask. UK clinical wording, no PII. Based on NHS guidelines"
             ),
             "bullets": (
                 "Concise 3–5 bullet summary with bolded labels: Indication, Symptoms, Function, Request. "
