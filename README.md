@@ -2,7 +2,7 @@ NHS Medical Document Processor Framework for Cardiovascular Issues (NHS Personal
 
 **Note: I am NOT affiliated with the NHS. This is just a project I have made using online, open-source PDFs and Guidelines from the NHS and NICE. It is a framework for my thought process in how to use AI within Medical systems (considering ethical implications, technology guidelines, and other confounding factors). Results still need to be fine-tuned; it is NOT COMPLETE, it is NOT completely foolproof/tested, it is an unfinished idea/framework.**
 
-This workspace contains an MVP version of the NHS medical document processor demo. AI-code assisted project with Github Copilot (By Bhargav Ashok, used GPT-5 mini in VS Code IDE for this project). Still a Work in Progress. It is NOT a full-fledged finished Product. It is a Personal Interest Project/Framework as stated above. **There is no actual patient data used; only dummy data is used for testing**.
+This workspace contains an MVP version of the NHS medical document processor demo. AI-code assisted project with Github Copilot (By Bhargav Ashok, used GPT-5 mini and Claude 4.5 Sonnet in VS Code IDE + Claude Website for this project). Still a Work in Progress. It is NOT a full-fledged finished Product. It is a Personal Interest Project/Framework as stated above. **There is no actual patient data used; only dummy data is used for testing**.
 
 
 This AI tool is designed to assist cardiovascular surgeons within the NHS in the triage of referral letters received from GPs. These letters contain detailed patient histories and descriptions of current medical concerns. Traditionally, reviewing and prioritizing these referrals is a time-consuming task, often rotated among surgical teams. The NHS has to maintain a strict code of record management and practices when it comes to patients' data (records management guidelines found here: https://transform.england.nhs.uk/information-governance/guidance/records-management-code/records-management-code-of-practice/).
@@ -25,7 +25,7 @@ python -m venv .venv; pip install -r requirements.txt
 
 # You should have the following 
 
-- Claude API key
+- BioGPT (by Microsoft: https://github.com/microsoft/BioGPT)
 - env configurations set for transformers if needed
 - env configurations for OCR PDF reading (Tesseract)
 - Every library in the requirements.txt file
@@ -37,13 +37,13 @@ Run python frontend\app.py OR similar
 
 # Tech stack
 
-- Claude Opus API
+- BioGPT (by Microsoft: https://github.com/microsoft/BioGPT) + BART (https://huggingface.co/docs/transformers/en/model_doc/bart)
 - Python (adhering to DTAC NHS guidelines, model context, patient data types (usually strings), NLP, RAG, Transformers, etc).
-- OCR/PDF storage (RAG again) with ChromaDB Vector Database (with an open source embedding model)
+- OCR/PDF storage (RAG again) with ChromaDB Vector Database (with an open source embedding model) + txt files for testing
 - Flask app for API route handling
 - Simple HTML front end
 
-use of github copilot (GPT 5 mini)
+use of github copilot (GPT 5 mini) + Claude 4.5 Sonnet
 
 # Future Improvements
 
@@ -53,7 +53,7 @@ use of github copilot (GPT 5 mini)
 
 - Accuracy in recommendation with more specified guidelines instead of three simple levels
 
-- Human-in-the-loop frameworks, tests, etc..
+- Human-in-the-loop frameworks, more tests, etc.
 
 # Ideal setup
 
@@ -73,6 +73,8 @@ https://nhsdigital.github.io/rap-community-of-practice/introduction_to_RAP/level
 https://github.com/nhsx/open-source-policy/blob/main/open-source-policy.md#b-readmes
 
 https://www.england.nhs.uk/long-read/artificial-intelligence-ai-and-machine-learning/
+
+More info about NHS technology guidelines can be found online. This project adheres to those guidelines.
 
 - Estimated RAP Level: Around Baseline (Hobby Project with public data/PDFs available on the internet).
 
