@@ -14,6 +14,7 @@ import json
 import tempfile
 from datetime import datetime
 from typing import Optional, Dict, Any
+import logging
 
 from flask import (
     Flask, request, jsonify, render_template_string, render_template,
@@ -415,7 +416,8 @@ def api_fhir_service_request():
         return jsonify({"success": True, "fhir": fhir, "source": result}), 200
 
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        logging.exception('Unhandled exception processing FHIR ServiceRequest')
+        return jsonify({"success": False, "error": "An internal error occurred."}), 500
 
 # -----------------------------------------------------------------------------
 # Error handlers
