@@ -31,7 +31,6 @@ python -m venv .venv; pip install -r requirements.txt
 - Every library in the requirements.txt file
 
 # Run frontend demo (Via VS Code CLI or similar)
-Use $env and input the following information (Claude API key, location of OCR library)
 Run python frontend\app.py OR similar 
 
 
