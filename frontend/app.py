@@ -383,7 +383,8 @@ def api_analyze():
         return jsonify(result), status
 
     except Exception as e:
-        return jsonify({"success": False, "error": str(e)}), 500
+        logging.exception('Unhandled exception processing /api/analyze request')
+        return jsonify({"success": False, "error": "An internal error occurred."}), 500
 
 @app.post("/api/fhir/servicerequest")
 def api_fhir_service_request():
