@@ -112,7 +112,7 @@ def process_document():
         
         return jsonify({
             'status': 'error',
-            'error': str(e)
+            'error': 'An internal error has occurred. Please try again later.'
         }), 500
 
 @app.route('/health')
