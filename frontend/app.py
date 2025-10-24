@@ -410,7 +410,8 @@ def api_fhir_service_request():
 
         result = PROCESSOR.process_document(io.BytesIO(pdf_bytes), patient_identifier=patient_id)
         if not result.get("success"):
-            return jsonify(result), 500
+            # Return generic error to user, don't leak backend exception info
+            return jsonify({"success": False, "error": "An internal error occurred."}), 500
 
         fhir = to_fhir_servicerequest(result.get("recommendation", {}), patient_identifier=patient_id)
         return jsonify({"success": True, "fhir": fhir, "source": result}), 200
