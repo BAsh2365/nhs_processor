@@ -15,6 +15,10 @@ import tempfile
 from datetime import datetime
 from typing import Optional, Dict, Any
 import logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(message)s",
+)
 
 from flask import (
     Flask, request, jsonify, render_template_string, render_template,
@@ -244,7 +248,8 @@ def admin_ingest():
         chunks = col.count() if (col and getattr(col, "count", None)) else 0
         return jsonify({"ok": True, "chunks": chunks}), 200
     except Exception as e:
-        return jsonify({"ok": False, "error": str(e)}), 500
+        logging.exception("Error during /admin/ingest")
+        return jsonify({"ok": False, "error": "An internal error occurred."}), 500
 
 # /upload
 # /upload
