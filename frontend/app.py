@@ -414,8 +414,10 @@ def api_fhir_service_request():
             return jsonify({"success": False, "error": "An internal error occurred."}), 500
 
         fhir = to_fhir_servicerequest(result.get("recommendation", {}), patient_identifier=patient_id)
-        return jsonify({"success": True, "fhir": fhir, "source": result}), 200
-
+        # Only return non-sensitive fields in "source"
+        safe_result = dict(result)
+        safe_result.pop("error", None)      # Remove backend error string if present
+        return jsonify({"success": True, "fhir": fhir, "source": safe_result}), 200
     except Exception as e:
         logging.exception('Unhandled exception processing FHIR ServiceRequest')
         return jsonify({"success": False, "error": "An internal error occurred."}), 500
