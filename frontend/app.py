@@ -236,7 +236,8 @@ def kb_status():
             return jsonify({"available": False, "message": "Vector store not available"}), 200
         return jsonify({"available": True, "chunks": col.count()}), 200
     except Exception as e:
-        return jsonify({"available": False, "error": str(e)}), 500
+        logging.exception("Error during /admin/kb_status")
+        return jsonify({"available": False, "error": "An internal error occurred."}), 500
 
 @app.post("/admin/ingest")
 def admin_ingest():
