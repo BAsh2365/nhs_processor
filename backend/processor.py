@@ -115,7 +115,7 @@ class MedicalDocumentProcessor:
             
             return {
                 "status": "error",
-                "error": str(e),
+                "error": "An internal error has occurred.",
                 "details": "Document processing failed"
             }
     
@@ -171,5 +171,5 @@ class MedicalDocumentProcessor:
             print(f"[ERROR] Text processing failed: {e}")
             return {
                 "status": "error",
-                "error": str(e)
+                "error": "An internal error has occurred."
             }
