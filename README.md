@@ -7,7 +7,7 @@ This workspace contains an MVP version of the NHS medical document processor dem
 
 This AI tool is designed to assist cardiovascular surgeons within the NHS in the triage of referral letters received from GPs. These letters contain detailed patient histories and descriptions of current medical concerns. Traditionally, reviewing and prioritizing these referrals is a time-consuming task, often rotated among surgical teams. The NHS has to maintain a strict code of record management and practices when it comes to patients' data (records management guidelines found here: https://transform.england.nhs.uk/information-governance/guidance/records-management-code/records-management-code-of-practice/).
 
-The AI model streamlines this process by summarizing key patient information and highlighting critical issues and a suggested plan of action (with three levels currently: Routine, Urgent, Emergency), enabling surgeons to quickly identify cases that require urgent attention or further investigation, including potential surgery. While a surgeon reviewing the information remains essential for final decision-making, this tool significantly reduces the time spent reviewing referrals and enhances clinical efficiency by focusing attention on the most relevant data.
+The AI model streamlines this process by summarizing key patient information and highlighting critical issues and a suggested plan of action (with three levels currently: Routine, Urgent, Emergency), enabling surgeons to quickly identify cases that require urgent attention or further investigation, including potential surgery. While a surgeon reviewing the information remains essential and is required for final decision-making, this tool shoudl hopefully reduce the time spent reviewing referrals and enhances clinical efficiency by focusing attention on the most relevant data.
 
 Structure:
 - backend/: core processing modules (anonymizer, pdf parsing, risk assessor, recommendation engine, processor)
@@ -82,9 +82,9 @@ More info about NHS technology guidelines can be found online. This project adhe
 
 **If you have any questions about this framework project, let me know! (Email: Bhargav.ashok2023@gmail.com)**
 
-**If you use this project, please build upon it for the greater good of its original intent. Feel free to work on this project, clone it, understand it, improve it, etc. Please cite the author of this Repo when doing so (Bhargav Ashok)**
+**If you use this project, please build upon it for the greater good of its original intent (used as a tool, cardiovascular surgeons are required to review the information. It is a tool and should be used as such). Feel free to work on this project, clone it, understand it, improve it, etc. Please cite the author of this Repo when doing so (Bhargav Ashok)**
 
-Last edit: 10/24/2025
+Last edit: 10/28/2025
 
 
 
