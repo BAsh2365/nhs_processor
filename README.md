@@ -85,7 +85,7 @@ More info about NHS technology guidelines can be found online. This project adhe
 
 **If you use this project, please build upon it for the greater good of its original intent (used as a tool, cardiovascular surgeons are required to review the information. It is a tool and should be used as such). Feel free to work on this project, clone it, understand it, improve it, etc. Please cite the author of this Repo when doing so (Bhargav Ashok)**
 
-Last edit: 10/28/2025
+Last edit: 10/31/2025 (Updated README)
 
 
 
