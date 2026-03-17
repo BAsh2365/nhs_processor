@@ -3,8 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NHS Medical Document Processor</title>
+    <title>Medical Document Processor</title>
     <style>
+        :root {
+            --primary-color: #005EB8;
+            --secondary-color: #003087;
+            --success-color: #007F3B;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -13,7 +19,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #005EB8 0%, #003087 100%);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             min-height: 100vh;
             padding: 20px;
         }
@@ -31,8 +37,8 @@
             margin-bottom: 30px;
         }
 
-        .nhs-logo {
-            color: #005EB8;
+        .logo-text {
+            color: var(--primary-color);
             font-size: 28px;
             font-weight: bold;
             margin-bottom: 10px;
@@ -62,6 +68,74 @@
             color: #FF8800;
         }
 
+        .config-section {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .config-section h3 {
+            color: #212B32;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .config-row {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .config-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .config-group label {
+            display: block;
+            font-weight: 600;
+            color: #425563;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .config-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 2px solid #E8EDEE;
+            border-radius: 5px;
+            font-size: 14px;
+            background: white;
+            color: #212B32;
+        }
+
+        .config-group select:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+
+        .scope-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+        }
+
+        .scope-toggle input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary-color);
+        }
+
+        .scope-toggle label {
+            font-size: 14px;
+            color: #425563;
+            cursor: pointer;
+        }
+
         .upload-section {
             background: white;
             padding: 40px;
@@ -71,7 +145,7 @@
         }
 
         .upload-area {
-            border: 3px dashed #005EB8;
+            border: 3px dashed var(--primary-color);
             border-radius: 10px;
             padding: 40px;
             text-align: center;
@@ -82,12 +156,12 @@
 
         .upload-area:hover {
             background: #E8EDEE;
-            border-color: #003087;
+            border-color: var(--secondary-color);
         }
 
         .upload-icon {
             font-size: 48px;
-            color: #005EB8;
+            color: var(--primary-color);
             margin-bottom: 20px;
         }
 
@@ -98,7 +172,7 @@
         .file-label {
             display: inline-block;
             padding: 12px 30px;
-            background: #005EB8;
+            background: var(--primary-color);
             color: white;
             border-radius: 5px;
             cursor: pointer;
@@ -107,7 +181,7 @@
         }
 
         .file-label:hover {
-            background: #003087;
+            background: var(--secondary-color);
         }
 
         .file-name {
@@ -119,7 +193,7 @@
         .process-btn {
             width: 100%;
             padding: 15px;
-            background: #007F3B;
+            background: var(--success-color);
             color: white;
             border: none;
             border-radius: 5px;
@@ -131,7 +205,7 @@
         }
 
         .process-btn:hover:not(:disabled) {
-            background: #00632E;
+            filter: brightness(0.85);
         }
 
         .process-btn:disabled {
@@ -147,7 +221,7 @@
 
         .spinner {
             border: 4px solid #f3f3f3;
-            border-top: 4px solid #005EB8;
+            border-top: 4px solid var(--primary-color);
             border-radius: 50%;
             width: 50px;
             height: 50px;
@@ -194,7 +268,7 @@
             margin-bottom: 15px;
         }
 
-        .urgency-emergency {
+        .urgency-emergency, .urgency-emergent {
             background: #DA291C;
             color: white;
         }
@@ -204,7 +278,7 @@
             color: white;
         }
 
-        .urgency-routine {
+        .urgency-routine, .urgency-elective {
             background: #007F3B;
             color: white;
         }
@@ -222,7 +296,7 @@
         }
 
         .red-flag-item:before {
-            content: "⚠ ";
+            content: "\26A0 ";
         }
 
         .error {
@@ -232,6 +306,18 @@
             padding: 20px;
             border-radius: 5px;
             color: #DA291C;
+        }
+
+        .framework-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            background: var(--primary-color);
+            color: white;
+            margin-left: 10px;
+            vertical-align: middle;
         }
 
         .footer {
@@ -246,22 +332,41 @@
     <div class="container">
         <!-- Header -->
         <div class="header">
-            <div class="nhs-logo">NHS</div>
+            <div class="logo-text" id="logo-text">NHS</div>
             <h1>Medical Document Processor</h1>
-            <p class="subtitle">AI-Powered Cardiovascular Referral Triage System</p>
-            
+            <p class="subtitle" id="subtitle-text">AI-Powered Cardiovascular Referral Triage System</p>
+
             <div class="warning-box">
-                <strong>⚠ IMPORTANT:</strong> This is a demonstration framework for research purposes only. 
+                <strong>IMPORTANT:</strong> This is a demonstration framework for research purposes only.
                 NOT for clinical use. All recommendations require validation by qualified healthcare professionals.
+            </div>
+        </div>
+
+        <!-- Framework Configuration -->
+        <div class="config-section">
+            <h3>Framework Configuration</h3>
+            <div class="config-row">
+                <div class="config-group">
+                    <label for="framework-select">Clinical Framework</label>
+                    <select id="framework-select">
+                        <option value="nhs_uk" selected>NHS UK (NICE Guidelines)</option>
+                    </select>
+                </div>
+                <div class="config-group" id="scopes-group">
+                    <label>Clinical Scopes</label>
+                    <div id="scopes-container">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- Upload Section -->
         <div class="upload-section">
             <h2 style="margin-bottom: 20px; color: #212B32;">Upload Referral Letter</h2>
-            
+
             <div class="upload-area" onclick="document.getElementById('file-input').click()">
-                <div class="upload-icon">📄</div>
+                <div class="upload-icon">&#x1F4C4;</div>
                 <label for="file-input" class="file-label">Choose File</label>
                 <input type="file" id="file-input" accept=".pdf,.txt">
                 <div class="file-name" id="file-name">No file chosen</div>
@@ -276,7 +381,7 @@
         <!-- Loading -->
         <div class="loading" id="loading">
             <div class="spinner"></div>
-            <p style="color: #005EB8; font-size: 18px;">Processing document...</p>
+            <p style="color: var(--primary-color); font-size: 18px;">Processing document...</p>
             <p style="color: #768692; margin-top: 10px;">This may take a few moments</p>
         </div>
 
@@ -287,8 +392,11 @@
 
         <!-- Results -->
         <div class="results" id="results">
-            <h2 style="margin-bottom: 20px; color: #212B32;">Triage Results</h2>
-            
+            <h2 style="margin-bottom: 20px; color: #212B32;">
+                Triage Results
+                <span class="framework-badge" id="result-framework-badge"></span>
+            </h2>
+
             <div class="result-section">
                 <div class="result-label">Clinical Summary</div>
                 <div id="summary" style="color: #425563; line-height: 1.6;"></div>
@@ -320,8 +428,8 @@
 
         <!-- Footer -->
         <div class="footer">
-            <p>NHS Medical Document Processor Framework (MVP)</p>
-            <p style="margin-top: 5px; font-size: 12px;">Using Local AI Models • NHS Compliant • No External APIs</p>
+            <p>Medical Document Processor Framework (MVP)</p>
+            <p style="margin-top: 5px; font-size: 12px;">Using Local AI Models &bull; No External APIs</p>
         </div>
     </div>
 
@@ -332,6 +440,63 @@
         const loading = document.getElementById('loading');
         const results = document.getElementById('results');
         const error = document.getElementById('error');
+        const frameworkSelect = document.getElementById('framework-select');
+        const scopesContainer = document.getElementById('scopes-container');
+
+        // Load available frameworks and scopes on page load
+        async function loadFrameworkOptions() {
+            try {
+                const resp = await fetch('/frameworks');
+                const data = await resp.json();
+
+                // Populate framework dropdown
+                frameworkSelect.innerHTML = '';
+                data.frameworks.forEach(fw => {
+                    const opt = document.createElement('option');
+                    opt.value = fw.id;
+                    opt.textContent = fw.name;
+                    if (fw.id === 'nhs_uk') opt.selected = true;
+                    frameworkSelect.appendChild(opt);
+                });
+
+                // Populate scope toggles
+                scopesContainer.innerHTML = '';
+                data.scopes.forEach(scope => {
+                    const div = document.createElement('div');
+                    div.className = 'scope-toggle';
+                    div.innerHTML =
+                        '<input type="checkbox" id="scope-' + scope.id + '" value="' + scope.id + '">' +
+                        '<label for="scope-' + scope.id + '">' + scope.name + '</label>';
+                    scopesContainer.appendChild(div);
+                });
+            } catch (e) {
+                console.warn('Could not load framework options:', e);
+            }
+        }
+
+        // Update branding when framework changes
+        async function updateBranding(frameworkId) {
+            try {
+                const resp = await fetch('/framework-config/' + frameworkId);
+                const data = await resp.json();
+
+                if (data.branding) {
+                    const b = data.branding;
+                    document.documentElement.style.setProperty('--primary-color', b.primary_color || '#005EB8');
+                    document.documentElement.style.setProperty('--secondary-color', b.secondary_color || '#003087');
+                    document.documentElement.style.setProperty('--success-color', b.success_color || '#007F3B');
+
+                    document.getElementById('logo-text').textContent = b.logo_text || 'NHS';
+                    document.getElementById('subtitle-text').textContent = b.subtitle || 'AI-Powered Cardiovascular Referral Triage System';
+                }
+            } catch (e) {
+                console.warn('Could not load framework config:', e);
+            }
+        }
+
+        frameworkSelect.addEventListener('change', function() {
+            updateBranding(this.value);
+        });
 
         // Handle file selection
         fileInput.addEventListener('change', function() {
@@ -352,32 +517,36 @@
             // Hide previous results/errors
             results.style.display = 'none';
             error.style.display = 'none';
-            
+
             // Show loading
             loading.style.display = 'block';
             processBtn.disabled = true;
 
-            // Create form data
+            // Build form data with framework and scopes
             const formData = new FormData();
             formData.append('file', file);
+            formData.append('framework', frameworkSelect.value);
+
+            const selectedScopes = [];
+            document.querySelectorAll('#scopes-container input[type="checkbox"]:checked').forEach(cb => {
+                selectedScopes.push(cb.value);
+            });
+            if (selectedScopes.length > 0) {
+                formData.append('scopes', selectedScopes.join(','));
+            }
 
             try {
-                // Send request
                 const response = await fetch('/process', {
                     method: 'POST',
                     body: formData
                 });
 
                 const data = await response.json();
-
-                // Hide loading
                 loading.style.display = 'none';
 
                 if (data.status === 'success') {
-                    // Display results
                     displayResults(data);
                 } else {
-                    // Display error
                     showError(data.error || 'Unknown error occurred');
                 }
             } catch (err) {
@@ -389,6 +558,10 @@
         function displayResults(data) {
             // Summary
             document.getElementById('summary').textContent = data.summary;
+
+            // Framework badge
+            const fwBadge = document.getElementById('result-framework-badge');
+            fwBadge.textContent = data.framework || 'NHS UK';
 
             // Urgency
             const urgency = data.recommendation.urgency;
@@ -404,9 +577,11 @@
             if (redFlags.length > 0) {
                 document.getElementById('red-flags-section').style.display = 'block';
                 const redFlagsDiv = document.getElementById('red-flags');
-                redFlagsDiv.innerHTML = redFlags.map(flag => 
-                    `<div class="red-flag-item">${flag}</div>`
-                ).join('');
+                redFlagsDiv.innerHTML = redFlags.map(function(flag) {
+                    return '<div class="red-flag-item">' + flag + '</div>';
+                }).join('');
+            } else {
+                document.getElementById('red-flags-section').style.display = 'none';
             }
 
             // Evidence
@@ -425,6 +600,9 @@
             error.style.display = 'block';
             processBtn.disabled = false;
         }
+
+        // Initialize
+        loadFrameworkOptions();
     </script>
 </body>
 </html>

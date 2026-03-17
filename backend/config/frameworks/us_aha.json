@@ -1,0 +1,105 @@
+{
+  "id": "us_aha",
+  "name": "US AHA/ACC",
+  "description": "American Heart Association / American College of Cardiology cardiovascular triage framework",
+
+  "clinical_terms": {
+    "red_flags": [
+      "ongoing chest pain", "at rest chest pain", "ischaemic chest pain", "ischemic chest pain",
+      "sweating with chest pain", "diaphoresis", "radiation to arm or jaw",
+      "hypotension", "shock", "haemodynamic instability", "hemodynamic instability",
+      "sustained ventricular tachycardia", "vf arrest", "vt arrest", "complete heart block",
+      "syncope on exertion", "collapse during exercise",
+      "tearing chest pain", "back migrating chest pain", "pulse deficit",
+      "pulmonary oedema", "pulmonary edema", "acute heart failure", "oxygen saturation <90%",
+      "exertional syncope", "syncope with murmur", "severe aortic stenosis",
+      "cardiac tamponade", "flash pulmonary edema", "cardiogenic shock",
+      "acute coronary syndrome", "unstable angina"
+    ],
+    "surgical_indicators": [
+      "severe valvular disease", "aortic stenosis", "mitral regurgitation",
+      "coronary artery disease", "triple vessel disease", "left main stem stenosis",
+      "ventricular septal defect", "aortic aneurysm", "cardiac transplant",
+      "lvef <30%", "ejection fraction <30", "refractory heart failure",
+      "LVAD candidacy", "CABG indication", "mechanical circulatory support",
+      "percutaneous coronary intervention", "transcatheter aortic valve replacement"
+    ],
+    "emergency_patterns": [
+      "\\b(stemi|ongoing ischemia|cardiogenic shock|vf arrest|vt storm)\\b",
+      "\\b(aortic dissection|type a dissection)\\b",
+      "\\b(cardiac tamponade|flash pulmonary edema|cardiac arrest)\\b"
+    ]
+  },
+
+  "scoring": {
+    "red_flag_weight": 3.0,
+    "surgical_indicator_weight": 1.0,
+    "emergency_pattern_weight": 5.0,
+    "emergency_threshold": 5.0,
+    "urgent_threshold": 2.0
+  },
+
+  "urgency_levels": ["EMERGENT", "URGENT", "ELECTIVE"],
+
+  "guidelines": {
+    "references": [
+      "AHA/ACC/ASE/CHEST/SAEM/SCCT/SCMR 2021 Chest Pain Evaluation Guideline (with 2023 corrections)",
+      "ACC/AHA 2020 Valvular Heart Disease Guideline",
+      "AHA/ACC/HFSA 2022 Heart Failure Guideline (with 2023 corrections)",
+      "ACC/AHA/ACEP/NAEMSP/SCAI 2025 Acute Coronary Syndromes Guideline (replaces standalone 2013 STEMI guideline)"
+    ],
+    "evidence_basis_text": "AHA/ACC 2021 Chest Pain Evaluation Guideline; ACC/AHA 2020 Valvular Heart Disease Guideline; AHA/ACC/HFSA 2022 Heart Failure Guideline; ACC/AHA/ACEP/NAEMSP/SCAI 2025 ACS Guideline.",
+    "timeframes": {
+      "emergency": "Immediate activation of cardiac catheterization lab or emergency department protocol.",
+      "urgent": "Urgent cardiology consultation within 72 hours per AHA/ACC pathway.",
+      "routine": "Elective outpatient evaluation with non-invasive workup."
+    },
+    "referral_guarantee": null
+  },
+
+  "prompts": {
+    "system_context": "You are a HIPAA-aware clinical decision support assistant for cardiology teams in the United States. Provide conservative, guideline-aligned triage recommendations based on the referral letter. Reference AHA/ACC guidelines for chest pain evaluation (2021), valvular heart disease (2020), heart failure (2022 AHA/ACC/HFSA), and the 2025 ACC/AHA ACS guideline (which replaces the former standalone STEMI guideline). Do not invent facts. Use executive style for reasoning. Use the knowledge base to inform your recommendations. Ensure output is neatly formatted and easy to read.",
+    "summary_suffix": "US clinical wording, no PHI. Based on AHA/ACC guidelines",
+    "schema_hint_suffix": "Based on AHA/ACC standards for cardiology triage. Urgency must adhere to AHA/ACC guidelines for cardiovascular conditions. Urgency levels are: EMERGENT (immediate action), URGENT (within 72 hours), ELECTIVE (standard outpatient evaluation). Choose the most appropriate urgency based on the letter content and AHA/ACC guidelines."
+  },
+
+  "pii_patterns": {
+    "ssn": {
+      "pattern": "\\b\\d{3}-\\d{2}-\\d{4}\\b",
+      "replacement": "[SSN REDACTED]"
+    },
+    "mrn": {
+      "pattern": "(?:MRN|Medical Record)\\s*(?:Number)?:?\\s*\\d{6,10}",
+      "replacement": "MRN: [REDACTED]"
+    },
+    "zip_code": {
+      "pattern": "\\b\\d{5}(?:-\\d{4})?\\b",
+      "replacement": "[ZIP REDACTED]"
+    }
+  },
+
+  "branding": {
+    "primary_color": "#C8102E",
+    "secondary_color": "#003865",
+    "success_color": "#007F3B",
+    "logo_text": "AHA",
+    "subtitle": "AI-Powered Cardiovascular Referral Triage System (AHA/ACC)"
+  },
+
+  "kb_collections": ["us_aha_kb"],
+
+  "models": {
+    "medical_reasoning": {
+      "model_id": "microsoft/BioGPT-Large",
+      "type": "causal_lm"
+    },
+    "summarization": {
+      "model_id": "facebook/bart-large-cnn",
+      "type": "summarization_pipeline"
+    },
+    "embeddings": {
+      "model_id": "all-MiniLM-L6-v2",
+      "type": "sentence_transformer"
+    }
+  }
+}

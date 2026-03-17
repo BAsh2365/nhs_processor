@@ -1,0 +1,68 @@
+EMERGENT CARDIOLOGY CONSULTATION REQUEST
+
+Date: 03/15/2026
+Requesting Physician: Dr. Michael Chen, MD, Emergency Medicine
+Facility: Memorial Regional Medical Center, Houston, TX 77030
+
+Patient Name: Robert Alvarez
+Date of Birth: 07/22/1958
+MRN: 20458931
+SSN: 451-78-3294
+Insurance: Blue Cross Blue Shield PPO
+
+CLINICAL SUMMARY:
+
+Chief Complaint: Acute onset severe substernal chest pain radiating to left arm and jaw
+
+This is a 67-year-old Hispanic male presenting to the Emergency Department via EMS with acute onset crushing substernal chest pain that began approximately 45 minutes ago while at rest watching television. The pain is described as 10/10 severity, pressure-like, radiating to the left arm and jaw, associated with diaphoresis, nausea, and shortness of breath.
+
+Past Medical History:
+- Type 2 Diabetes Mellitus (A1c 8.2%)
+- Hypertension
+- Hyperlipidemia (LDL 142 mg/dL on last check)
+- Former smoker (40 pack-year history, quit 2 years ago)
+- Family history: father died of MI at age 54
+- BMI 31.2
+
+Current Medications:
+- Metformin 1000mg BID
+- Lisinopril 20mg daily
+- Atorvastatin 40mg daily
+- Aspirin 81mg daily
+
+Emergency Department Assessment:
+- Vitals: BP 168/98 mmHg, HR 102 bpm (sinus tachycardia), RR 22, SpO2 94% on room air, Temp 98.6F
+- Diaphoretic, anxious, clutching chest
+- Cardiac exam: S1/S2 regular, no murmurs/gallops, no JVD
+- Lungs: Bilateral basilar crackles
+- Extremities: No edema, pulses 2+ bilaterally
+
+12-Lead ECG: STEMI - ST elevation in leads II, III, aVF (inferior), with reciprocal ST depression in I, aVL. No prior ECG available for comparison.
+
+Labs (point of care):
+- Troponin I: 2.4 ng/mL (elevated, normal <0.04)
+- BMP: Creatinine 1.1, K+ 4.2
+- CBC: WNL
+- BNP: 890 pg/mL
+
+Chest X-ray: Mild pulmonary vascular congestion, no pneumothorax
+
+IMPRESSION: Acute inferior STEMI with hemodynamic compromise
+
+INTERVENTIONS INITIATED:
+- Aspirin 325mg chewed
+- Heparin bolus per STEMI protocol
+- Nitroglycerin SL x2 (minimal relief)
+- Morphine 4mg IV for pain management
+- Ticagrelor 180mg loading dose administered
+- Cardiology on-call notified, STEMI alert activated
+- Cath lab team mobilized
+
+REQUEST: Emergent cardiac catheterization and primary PCI per AHA/ACC STEMI guidelines. Door-to-balloon time target <90 minutes. Current time from symptom onset approximately 60 minutes.
+
+This patient meets criteria for emergent intervention per AHA/ACC 2021 Chest Pain Evaluation guidelines and STEMI management protocols. Please advise on disposition post-catheterization (CCU vs step-down).
+
+Respectfully,
+Dr. Michael Chen, MD, FACEP
+Emergency Medicine
+NPI: 1234567890

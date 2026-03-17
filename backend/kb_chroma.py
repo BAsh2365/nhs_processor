@@ -3,92 +3,115 @@ import os, warnings
 from typing import List, Dict, Optional
 
 # Ensure transformers never tries TensorFlow on your box
-# Force Transformers to ignore TensorFlow/Flax completely
 import os as _os
 _os.environ.setdefault("TRANSFORMERS_NO_TF", "1")
 _os.environ.setdefault("TRANSFORMERS_NO_FLAX", "1")
 
 
-_client = _col = _embed_model = None
+_client = None
+_collections: Dict[str, object] = {}
+_embed_model = None
+_embed_model_id = "all-MiniLM-L6-v2"
 _chroma_available = False
 
-def _ensure():
-    global _client, _col, _embed_model, _chroma_available
-    if _chroma_available:
-        return _client, _col, _embed_model
-    try:
-        import chromadb
-        from chromadb.config import Settings
-        from sentence_transformers import SentenceTransformer
-        store_path = os.path.join(os.path.dirname(__file__), "kb_chroma_store")
-        _client = chromadb.PersistentClient(path=store_path, settings=Settings(anonymized_telemetry=False))
-        _col = _client.get_or_create_collection("nhs_kb", metadata={"hnsw:space": "cosine"})
-        _embed_model = SentenceTransformer("all-MiniLM-L6-v2")
-        _chroma_available = True
-    except Exception as e:
-        warnings.warn(f"kb_chroma: running in NO-INDEX mode ({e}).")
-        _client = _col = _embed_model = None
-        _chroma_available = False
-    return _client, _col, _embed_model
 
-def query(q: str, k: int = 3):
+def _ensure(collection_name: str = "nhs_kb", embed_model_id: Optional[str] = None):
+    global _client, _collections, _embed_model, _embed_model_id, _chroma_available
+
+    # Update embedding model if a different one is requested
+    if embed_model_id and embed_model_id != _embed_model_id:
+        _embed_model = None
+        _embed_model_id = embed_model_id
+
+    if _client is None:
+        try:
+            import chromadb
+            from chromadb.config import Settings
+            store_path = os.path.join(os.path.dirname(__file__), "kb_chroma_store")
+            _client = chromadb.PersistentClient(path=store_path, settings=Settings(anonymized_telemetry=False))
+            _chroma_available = True
+        except Exception as e:
+            warnings.warn(f"kb_chroma: running in NO-INDEX mode ({e}).")
+            _client = None
+            _chroma_available = False
+            return None, None, None
+
+    if _embed_model is None:
+        try:
+            from sentence_transformers import SentenceTransformer
+            _embed_model = SentenceTransformer(_embed_model_id)
+        except Exception as e:
+            warnings.warn(f"kb_chroma: embedding model failed ({e}).")
+            return _client, None, None
+
+    if collection_name not in _collections:
+        try:
+            _collections[collection_name] = _client.get_or_create_collection(
+                collection_name, metadata={"hnsw:space": "cosine"}
+            )
+        except Exception as e:
+            warnings.warn(f"kb_chroma: collection '{collection_name}' failed ({e}).")
+            return _client, None, _embed_model
+
+    return _client, _collections.get(collection_name), _embed_model
+
+
+def query(q: str, k: int = 3, collections: Optional[List[str]] = None,
+          embed_model_id: Optional[str] = None):
     """
     Retrieve top-k snippets for a free-text query.
+    Queries across specified collections and merges results by distance.
     Returns a list of {text, meta, distance}. Returns [] if the store isn't available.
     """
     if not q:
         return []
-    client, col, emb = _ensure()
-    if not col or not emb:
-        return []  # safe no-op when vector store or model isn't available
 
-    # Compute embedding for the query
-    try:
-        q_vec = emb.encode([q])[0]
-        res = col.query(
-            query_embeddings=[q_vec.tolist() if hasattr(q_vec, "tolist") else list(q_vec)],
-            n_results=int(k),
-            include=["documents", "metadatas", "distances"],
-        )
-        out = []
-        docs = res.get("documents", [[]])[0]
-        metas = res.get("metadatas", [[]])[0]
-        dists = res.get("distances", [[]])[0]
-        for i in range(len(docs)):
-            out.append({
-                "text": docs[i],
-                "meta": metas[i] if i < len(metas) else {},
-                "distance": dists[i] if i < len(dists) else None
-            })
-        return out
-    except Exception:
-        return []
+    collection_names = collections or ["nhs_kb"]
+    all_results = []
+
+    for col_name in collection_names:
+        client, col, emb = _ensure(col_name, embed_model_id)
+        if not col or not emb:
+            continue
+
+        try:
+            q_vec = emb.encode([q])[0]
+            res = col.query(
+                query_embeddings=[q_vec.tolist() if hasattr(q_vec, "tolist") else list(q_vec)],
+                n_results=int(k),
+                include=["documents", "metadatas", "distances"],
+            )
+            docs = res.get("documents", [[]])[0]
+            metas = res.get("metadatas", [[]])[0]
+            dists = res.get("distances", [[]])[0]
+            for i in range(len(docs)):
+                all_results.append({
+                    "text": docs[i],
+                    "meta": metas[i] if i < len(metas) else {},
+                    "distance": dists[i] if i < len(dists) else float('inf')
+                })
+        except Exception:
+            continue
+
+    # Sort by distance and return top k
+    all_results.sort(key=lambda x: x.get("distance", float('inf')))
+    return all_results[:k]
 
 
-def ingest_folder_chunked(folder: str, *, batch_size: int = 256, sbert_batch: int = 64,
+def ingest_folder_chunked(folder: str, *, collection_name: str = "nhs_kb",
+                          batch_size: int = 256, sbert_batch: int = 64,
                           chunk_size: int = 2200, overlap: int = 200,
-                          max_mb: Optional[int] = None) -> None:
+                          max_mb: Optional[int] = None,
+                          embed_model_id: Optional[str] = None) -> None:
     """
-    Ingest all PDFs/.txt/.md in a folder.
-    - batch_size: how many chunks to send to Chroma per add()
-    - sbert_batch: batch size for SentenceTransformer.encode (controls RAM/speed)
-    - chunk_size/overlap: chunking parameters
-    - max_mb: skip files larger than this (None = no limit)
+    Ingest all PDFs/.txt/.md in a folder into a specified collection.
     """
-    client, col, emb = _ensure()
+    client, col, emb = _ensure(collection_name, embed_model_id)
     if not col or not emb:
         warnings.warn("kb_chroma: vector store unavailable; skipping ingest.")
         return
 
     from .pdf_processor import PDFProcessor
-
-    def _already_indexed(doc_id_prefix: str) -> bool:
-        # quick heuristic: check if any id starting with prefix exists (cheap metadata scan)
-        try:
-            res = col.get(where={"source": {"$contains": doc_id_prefix}}, limit=1)
-            return bool(res and res.get("ids"))
-        except Exception:
-            return False
 
     for root, _, files in os.walk(folder):
         for fname in files:
@@ -101,7 +124,6 @@ def ingest_folder_chunked(folder: str, *, batch_size: int = 256, sbert_batch: in
                 continue
 
             try:
-                # Extract
                 if lower.endswith(".pdf"):
                     text = PDFProcessor.extract_text_from_pdf(path)
                 else:
@@ -113,38 +135,16 @@ def ingest_folder_chunked(folder: str, *, batch_size: int = 256, sbert_batch: in
                 if not chunks:
                     continue
 
-                ids_batch, metas_batch, docs_batch = [], [], []
                 prefix = os.path.basename(path)
-                # Optional: skip if we already have entries for this source
-                # (comment out if you prefer re-indexing every time)
-                # if _already_indexed(prefix):
-                #     print(f"Already indexed: {fname} (skipping)")
-                #     continue
 
-                # Stream encode in sbert-sized batches so we don’t blow RAM
-                def flush_batch(embeddings=None):
-                    nonlocal ids_batch, metas_batch, docs_batch
-                    if not ids_batch:
-                        return
-                    if embeddings is None:
-                        embeddings = emb.encode(docs_batch, batch_size=sbert_batch, show_progress_bar=False)
-                    col.add(
-                        ids=ids_batch,
-                        metadatas=metas_batch,
-                        documents=docs_batch,
-                        embeddings=[v.tolist() for v in embeddings],
-                    )
-                    ids_batch, metas_batch, docs_batch = [], [], []
-
-                # Build ids/meta and flush to Chroma in batches
                 pending_for_encode: List[str] = []
                 pending_ids, pending_meta = [], []
+
                 def flush_encode_batch():
                     nonlocal pending_for_encode, pending_ids, pending_meta
                     if not pending_for_encode:
                         return
                     embs = emb.encode(pending_for_encode, batch_size=sbert_batch, show_progress_bar=False)
-                    # send to Chroma also in chunks of `batch_size` in case sbert_batch is large
                     start = 0
                     while start < len(embs):
                         end = min(start + batch_size, len(embs))
@@ -164,16 +164,14 @@ def ingest_folder_chunked(folder: str, *, batch_size: int = 256, sbert_batch: in
                     pending_ids.append(cid)
                     pending_meta.append(meta)
 
-                    # Control the encode batch (for RAM)
                     if len(pending_for_encode) >= max(sbert_batch, batch_size):
                         flush_encode_batch()
 
-                # flush tail
                 flush_encode_batch()
                 try:
                     client.persist()
                 except Exception:
                     pass
-                print(f"Indexed (chunked): {fname} -> {len(chunks)} chunks")
+                print(f"Indexed (chunked) [{collection_name}]: {fname} -> {len(chunks)} chunks")
             except Exception as e:
                 warnings.warn(f"kb_chroma: failed ingest for {fname}: {e}")

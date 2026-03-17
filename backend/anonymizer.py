@@ -1,30 +1,46 @@
-# backend/anonymizer.py - FIXED
+# backend/anonymizer.py
 
 import re
 import hashlib
-from typing import Tuple
+from typing import Tuple, Optional
 
-def anonymize_text(text: str) -> Tuple[str, str]:
+
+def anonymize_text(text: str, config: Optional[dict] = None) -> Tuple[str, str]:
     """
-    Anonymize patient identifiable information in text
-    
+    Anonymize patient identifiable information in text.
+
     Args:
         text: Input text containing patient information
-        
+        config: Optional framework config with region-specific pii_patterns
+
     Returns:
         Tuple of (anonymized_text, patient_id_hash)
     """
     anonymized = text
     patient_id = "UNKNOWN"
-    
+
     # Try multiple patterns to extract patient ID
-    
+
     # Pattern 1: NHS Number
     nhs_match = re.search(r'NHS\s*Number:?\s*(\d{3}\s*\d{3}\s*\d{4})', text, re.IGNORECASE)
     if nhs_match:
         patient_id = nhs_match.group(1).replace(' ', '')
         print("[Anonymizer] Found NHS Number: [REDACTED]")
-    
+
+    # Pattern 1b: SSN (US)
+    if patient_id == "UNKNOWN":
+        ssn_match = re.search(r'\b(\d{3}-\d{2}-\d{4})\b', text)
+        if ssn_match:
+            patient_id = ssn_match.group(1).replace('-', '')
+            print("[Anonymizer] Found SSN: [REDACTED]")
+
+    # Pattern 1c: MRN (US)
+    if patient_id == "UNKNOWN":
+        mrn_match = re.search(r'(?:MRN|Medical Record)\s*(?:Number)?:?\s*(\d{6,10})', text, re.IGNORECASE)
+        if mrn_match:
+            patient_id = mrn_match.group(1)
+            print("[Anonymizer] Found MRN: [REDACTED]")
+
     # Pattern 2: Patient Name
     if patient_id == "UNKNOWN":
         name_patterns = [
@@ -36,60 +52,65 @@ def anonymize_text(text: str) -> Tuple[str, str]:
             name_match = re.search(pattern, text, re.IGNORECASE)
             if name_match:
                 patient_id = name_match.group(1).strip()
-                # print(f"[Anonymizer] Found Name: {patient_id}")  # Avoid logging the name in clear text
                 print("[Anonymizer] Found Name: [REDACTED]")
                 break
-    
+
     # Pattern 3: Use first line if still unknown
     if patient_id == "UNKNOWN":
         first_lines = text.split('\n')[:5]
         for line in first_lines:
             line = line.strip()
             if len(line) > 10 and len(line) < 100:
-                # Use first substantial line as ID
-                patient_id = line[:50]  # Limit length
-                # Do not log cleartext of fallback patient_id
+                patient_id = line[:50]
                 break
-    
-    # Anonymize the text by replacing identifiable information
-    # Replace NHS numbers
-    anonymized = re.sub(r'NHS\s*Number:?\s*\d{3}\s*\d{3}\s*\d{4}', 'NHS Number: [REDACTED]', anonymized, flags=re.IGNORECASE)
-    
+
+    # === Universal PII patterns (region-independent) ===
+
     # Replace names (common patterns)
     anonymized = re.sub(r'Patient\s*Name:?\s*[A-Z][a-z]+\s+[A-Z][a-z]+', 'Patient Name: [REDACTED]', anonymized, flags=re.IGNORECASE)
     anonymized = re.sub(r'Name:?\s*[A-Z][a-z]+\s+[A-Z][a-z]+', 'Name: [REDACTED]', anonymized, flags=re.IGNORECASE)
-    
+
     # Replace dates of birth
     anonymized = re.sub(r'DOB:?\s*\d{1,2}[/-]\d{1,2}[/-]\d{2,4}', 'DOB: [REDACTED]', anonymized, flags=re.IGNORECASE)
     anonymized = re.sub(r'Date of Birth:?\s*\d{1,2}[/-]\d{1,2}[/-]\d{2,4}', 'Date of Birth: [REDACTED]', anonymized, flags=re.IGNORECASE)
-    
+
     # Replace addresses (basic pattern)
     anonymized = re.sub(r'Address:?\s*[^\n]+', 'Address: [REDACTED]', anonymized, flags=re.IGNORECASE)
-    
+
     # Replace phone numbers
     anonymized = re.sub(r'(?:Phone|Tel|Mobile):?\s*[\d\s()-]+', 'Phone: [REDACTED]', anonymized, flags=re.IGNORECASE)
-    
+
     # Replace email addresses
     anonymized = re.sub(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', '[EMAIL REDACTED]', anonymized)
-    
-    # Replace postcodes (UK format)
-    anonymized = re.sub(r'\b[A-Z]{1,2}\d{1,2}\s*\d[A-Z]{2}\b', '[POSTCODE REDACTED]', anonymized, flags=re.IGNORECASE)
-    
+
+    # === Region-specific PII patterns from config ===
+    if config and "pii_patterns" in config:
+        for key, pii in config["pii_patterns"].items():
+            if isinstance(pii, dict) and "pattern" in pii:
+                try:
+                    anonymized = re.sub(pii["pattern"], pii["replacement"], anonymized, flags=re.IGNORECASE)
+                except re.error:
+                    pass
+    else:
+        # Default: apply NHS Number and UK postcode patterns for backward compatibility
+        anonymized = re.sub(r'NHS\s*Number:?\s*\d{3}\s*\d{3}\s*\d{4}', 'NHS Number: [REDACTED]', anonymized, flags=re.IGNORECASE)
+        anonymized = re.sub(r'\b[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}\b', '[POSTCODE REDACTED]', anonymized, flags=re.IGNORECASE)
+
     # Hash the patient ID for logging
     patient_hash = hash_patient_id(patient_id)
-    
+
     print(f"[Anonymizer] Anonymization complete. Patient hash: {patient_hash[:16]}...")
-    
+
     return anonymized, patient_hash
 
 
 def hash_patient_id(patient_id: str) -> str:
     """
     Create SHA-256 hash of patient ID for audit logging
-    
+
     Args:
         patient_id: Patient identifier
-        
+
     Returns:
         SHA-256 hash as hex string
     """
@@ -99,12 +120,15 @@ def hash_patient_id(patient_id: str) -> str:
 # Legacy class for backwards compatibility
 class Anonymizer:
     """Legacy class wrapper for anonymization functions"""
-    
+
+    def __init__(self, config: Optional[dict] = None):
+        self._config = config
+
     @staticmethod
-    def anonymize(text: str) -> Tuple[str, str]:
+    def anonymize(text: str, config: Optional[dict] = None) -> Tuple[str, str]:
         """Legacy method - calls anonymize_text"""
-        return anonymize_text(text)
-    
+        return anonymize_text(text, config=config)
+
     @staticmethod
     def hash_id(patient_id: str) -> str:
         """Legacy method - calls hash_patient_id"""

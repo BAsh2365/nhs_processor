@@ -1,0 +1,98 @@
+{
+  "id": "nhs_uk",
+  "name": "NHS UK",
+  "description": "NHS England cardiovascular triage framework aligned with NICE guidelines",
+
+  "clinical_terms": {
+    "red_flags": [
+      "ongoing chest pain", "at rest chest pain", "ischaemic chest pain", "ischemic chest pain",
+      "sweating with chest pain", "diaphoresis", "radiation to arm or jaw",
+      "hypotension", "shock", "haemodynamic instability", "hemodynamic instability",
+      "sustained ventricular tachycardia", "vf arrest", "vt arrest", "complete heart block",
+      "syncope on exertion", "collapse during exercise",
+      "tearing chest pain", "back migrating chest pain", "pulse deficit",
+      "pulmonary oedema", "acute heart failure", "oxygen saturation <90%",
+      "exertional syncope", "syncope with murmur", "severe aortic stenosis"
+    ],
+    "surgical_indicators": [
+      "severe valvular disease", "aortic stenosis", "mitral regurgitation",
+      "coronary artery disease", "triple vessel disease", "left main stem stenosis",
+      "ventricular septal defect", "aortic aneurysm", "cardiac transplant",
+      "lvef <30%", "ejection fraction <30", "refractory heart failure"
+    ],
+    "emergency_patterns": [
+      "\\b(stemi|ongoing ischemia|cardiogenic shock|vf arrest|vt storm)\\b",
+      "\\b(aortic dissection|type a dissection)\\b"
+    ]
+  },
+
+  "scoring": {
+    "red_flag_weight": 3.0,
+    "surgical_indicator_weight": 1.0,
+    "emergency_pattern_weight": 5.0,
+    "emergency_threshold": 5.0,
+    "urgent_threshold": 2.0
+  },
+
+  "urgency_levels": ["EMERGENCY", "URGENT", "ROUTINE"],
+
+  "guidelines": {
+    "references": [
+      "NICE CG95 (chest pain, last updated Nov 2016, confirmed current via 2019 surveillance)",
+      "NICE NG185 (ACS, published Nov 2020, reviewed Dec 2024)",
+      "NICE NG208 (valve disease, published Nov 2021, reviewed Oct 2025, TAVI update in progress)",
+      "NICE NG106 (chronic heart failure, updated Sep 2025 with SGLT2i recommendations)",
+      "NICE NG238 (CVD risk assessment and lipid modification, published Dec 2023, reviewed Sep 2025)",
+      "NHS England Adult Cardiac Surgery Service Specification (updated Jul 2024)"
+    ],
+    "evidence_basis_text": "NICE CG95 (chest pain); NICE NG185 (ACS); NICE NG208 (valve disease); NICE NG106 (chronic HF, updated Sep 2025); NHS England Adult Cardiac Surgery Service Specification (Jul 2024).",
+    "timeframes": {
+      "emergency": "Immediate escalation via local emergency protocol (ED/cardiology).",
+      "urgent": "Urgent assessment within 2 weeks, aligned to NICE ACS/chest-pain pathways.",
+      "routine": "Routine outpatient review and non-invasive diagnostics."
+    },
+    "referral_guarantee": "18-week"
+  },
+
+  "prompts": {
+    "system_context": "You are an NHS clinical decision-support assistant for cardiology/cardiothoracic teams, aware of the current DTAC (Digital Technology Assessment Criteria, updated Feb 2026). Provide conservative, guideline-aligned triage recommendations based on the letter. Prefer NICE CG95 (chest pain), NG185 (ACS), NG208 (valve disease), NG106 (chronic HF, updated Sep 2025), and the NHS England Adult Cardiac Surgery Service Specification (Jul 2024). Do not invent facts. Please use Exec Style for reasoning. Make sure the summary of the letter is neat and contains the main points of the letter. Use the Knowledge base PDFs to inform your recommendations. Make sure that the output is neatly formatted and easy to read.",
+    "summary_suffix": "UK clinical wording, no PII. Based on NHS guidelines",
+    "schema_hint_suffix": "Based on NHS standards for cardiology/cardiothoracic triage. Urgency must adhere to NHS and NICE guidelines for cardiovascular and thoracic conditions. Under the NHS Constitution, if your GP refers you for a condition that's not urgent, you have the right to start treatment led by a consultant within 18 weeks from when you're referred, unless you want to wait longer or waiting longer is clinically right for you."
+  },
+
+  "pii_patterns": {
+    "nhs_number": {
+      "pattern": "NHS\\s*Number:?\\s*\\d{3}\\s*\\d{3}\\s*\\d{4}",
+      "replacement": "NHS Number: [REDACTED]"
+    },
+    "uk_postcode": {
+      "pattern": "\\b[A-Z]{1,2}\\d[A-Z\\d]?\\s*\\d[A-Z]{2}\\b",
+      "replacement": "[POSTCODE REDACTED]"
+    }
+  },
+
+  "branding": {
+    "primary_color": "#005EB8",
+    "secondary_color": "#003087",
+    "success_color": "#007F3B",
+    "logo_text": "NHS",
+    "subtitle": "AI-Powered Cardiovascular Referral Triage System"
+  },
+
+  "kb_collections": ["nhs_kb"],
+
+  "models": {
+    "medical_reasoning": {
+      "model_id": "microsoft/BioGPT-Large",
+      "type": "causal_lm"
+    },
+    "summarization": {
+      "model_id": "facebook/bart-large-cnn",
+      "type": "summarization_pipeline"
+    },
+    "embeddings": {
+      "model_id": "all-MiniLM-L6-v2",
+      "type": "sentence_transformer"
+    }
+  }
+}

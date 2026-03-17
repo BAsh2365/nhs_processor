@@ -1,0 +1,78 @@
+{
+  "id": "congenital_achd",
+  "name": "Adult Congenital Heart Disease (ACHD/GUCH)",
+  "description": "Scope overlay for adult congenital heart disease — merges on top of any framework",
+
+  "red_flags_additional": [
+    "Eisenmenger syndrome", "Eisenmenger physiology",
+    "Fontan failure", "failing Fontan circulation",
+    "protein-losing enteropathy", "plastic bronchitis",
+    "arrhythmia in single ventricle",
+    "baffle leak", "baffle obstruction",
+    "conduit obstruction",
+    "endocarditis on prosthetic material",
+    "cyanotic deterioration in ACHD",
+    "exercise intolerance with desaturation",
+    "paradoxical embolism",
+    "pulmonary hypertension in ACHD"
+  ],
+
+  "surgical_indicators_additional": [
+    "Fontan revision", "conduit replacement",
+    "pulmonary valve replacement", "post-TOF repair",
+    "re-do sternotomy", "mechanical support in ACHD",
+    "heart transplant assessment in ACHD",
+    "Ross procedure revision", "coarctation re-intervention",
+    "Ebstein repair", "cone repair",
+    "residual VSD closure", "RVOT reconstruction"
+  ],
+
+  "emergency_patterns_additional": [
+    "\\b(Fontan failure|failing Fontan)\\b",
+    "\\b(Eisenmenger crisis|Eisenmenger syndrome)\\b",
+    "\\b(arrhythmia in single ventricle|single ventricle arrhythmia)\\b"
+  ],
+
+  "achd_considerations": {
+    "guideline_references": [
+      "ACC/AHA/HRS/ISACHD/SCAI 2025 Guideline for Management of Adults with CHD (replaces 2018 guideline)",
+      "ESC 2020 Guidelines on Adult Congenital Heart Disease (European Heart Journal, still current)"
+    ],
+    "complexity_classification": {
+      "simple": {
+        "examples": ["Isolated small ASD", "Repaired VSD without residua", "Mild pulmonary stenosis"],
+        "follow_up_interval": "Every 3-5 years at regional ACHD centre",
+        "basis": "ACC/AHA 2025 ACHD Guideline complexity stratification"
+      },
+      "moderate": {
+        "examples": ["Repaired tetralogy of Fallot", "Coarctation of aorta", "Ebstein anomaly (mild-moderate)", "Partial AV canal defect"],
+        "follow_up_interval": "Every 1-2 years at specialist ACHD centre",
+        "basis": "ACC/AHA 2025 ACHD Guideline complexity stratification"
+      },
+      "severe": {
+        "examples": ["Fontan circulation", "Eisenmenger syndrome", "Transposition (post-arterial switch or atrial switch)", "Single ventricle physiology", "Pulmonary atresia"],
+        "follow_up_interval": "Every 6-12 months at specialist ACHD centre",
+        "basis": "ACC/AHA 2025 ACHD Guideline complexity stratification"
+      }
+    },
+    "transition_of_care_flags": [
+      "Adolescent transitioning to adult services",
+      "Transfer from paediatric to adult congenital service",
+      "First adult ACHD clinic attendance"
+    ]
+  },
+
+  "fallback_signals": {
+    "emergency": [
+      "Fontan failure", "failing Fontan", "Eisenmenger crisis",
+      "cyanotic deterioration", "arrhythmia in single ventricle"
+    ],
+    "urgent": [
+      "protein-losing enteropathy", "baffle leak", "conduit obstruction",
+      "exercise intolerance with desaturation", "pulmonary hypertension in ACHD",
+      "Fontan revision", "heart transplant assessment"
+    ]
+  },
+
+  "kb_collections_additional": ["congenital_achd_kb"]
+}
