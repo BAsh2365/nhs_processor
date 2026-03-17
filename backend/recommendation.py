@@ -169,12 +169,9 @@ class ClinicalRecommendationEngine:
             ),
         }.get(style, f"Concise, surgeon-facing summary. {self._summary_suffix}.")
 
-        # Try BioGPT first for medical-domain summarization
-        biogpt_result = self._try_biogpt_summary(t, style_instructions, max_words)
-        if biogpt_result:
-            return self._sanitize_output(biogpt_result)
-
-        # Fallback to BART summarizer
+        # Use BART directly for summarization — BioGPT (small) is a text-completion
+        # model that doesn't follow summarization instructions reliably.
+        # BART-large-cnn is purpose-built for abstractive summarization.
         if self._summarizer is None:
             try:
                 self._load_summarizer()
