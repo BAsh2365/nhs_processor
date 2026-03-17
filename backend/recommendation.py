@@ -103,6 +103,9 @@ class ClinicalRecommendationEngine:
             self._summarizer = pipeline(
                 "summarization",
                 model=self._summarizer_model_id,
+                tokenizer=AutoTokenizer.from_pretrained(
+                    self._summarizer_model_id, model_max_length=1024
+                ),
                 device=0 if self.device == "cuda" else -1
             )
             _model_cache[cache_key] = self._summarizer
@@ -179,7 +182,9 @@ class ClinicalRecommendationEngine:
                 return self._extractive_fallback(t, max_words)
 
         try:
-            max_input_length = 1024
+            # BART-large-cnn has a 1024-token position embedding limit.
+            # 600 words ≈ 750 subword tokens — safely under the limit.
+            max_input_length = 600
             if len(t.split()) > max_input_length:
                 t = " ".join(t.split()[:max_input_length])
 
