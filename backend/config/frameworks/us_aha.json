@@ -90,7 +90,7 @@
 
   "models": {
     "medical_reasoning": {
-      "model_id": "microsoft/BioGPT-Large",
+      "model_id": "microsoft/BioGPT",
       "type": "causal_lm"
     },
     "summarization": {

@@ -37,7 +37,7 @@ class ClinicalRecommendationEngine:
         # Resolve model IDs from config or use defaults
         models_cfg = self.config.get("models", {})
         self._summarizer_model_id = models_cfg.get("summarization", {}).get("model_id", "facebook/bart-large-cnn")
-        self._reasoning_model_id = models_cfg.get("medical_reasoning", {}).get("model_id", "microsoft/BioGPT-Large")
+        self._reasoning_model_id = models_cfg.get("medical_reasoning", {}).get("model_id", "microsoft/BioGPT")
 
         # Resolve prompts from config or use defaults
         prompts = self.config.get("prompts", {})
