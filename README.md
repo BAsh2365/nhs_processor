@@ -10,47 +10,11 @@ This AI tool is designed to assist cardiovascular surgeons within the NHS in the
 The AI model streamlines this process by summarizing key patient information and highlighting critical issues and a suggested plan of action (with three levels currently: Routine, Urgent, Emergency), enabling surgeons to quickly identify cases that require urgent attention or further investigation, including potential surgery. While a surgeon reviewing the information remains essential and is required for final decision-making, this tool shoudl hopefully reduce the time spent reviewing referrals and enhances clinical efficiency by focusing attention on the most relevant data.
 
 ## Updated app structure
- 3. Directory Structure (full tree)
+ Directory Structure (full tree)
+ <img width="1033" height="830" alt="image" src="https://github.com/user-attachments/assets/49116a93-1ea5-4a1c-b506-a47d64fbdc4d" />
 
- nhs_processor/
- ├── backend/
- │   ├── config/
- │   │   ├── frameworks/
- │   │   │   ├── nhs_uk.json          # NHS UK framework (urgency, clinical terms, PII, branding, models)
- │   │   │   └── us_aha.json          # US AHA/ACC framework
- │   │   └── scopes/
- │   │       └── congenital_achd.json # ACHD scope overlay
- │   ├── config_loader.py             # load_framework(), list_frameworks(), list_scopes()
- │   ├── anonymizer.py                # Config-driven PII redaction
- │   ├── kb_chroma.py                 # Multi-collection ChromaDB interface
- │   ├── ingest_kb.py                 # CLI: python -m backend.ingest_kb --collection X --folder Y
- │   ├── risk_assessor.py             # Config-driven triage scoring
- │   ├── recommendation.py            # Config-driven recommendation engine
- │   └── processor.py                 # Orchestrator (MedicalDocumentProcessor)
- ├── frontend/
- │   ├── app.py                       # Flask app with /frameworks, /framework-config, /process
- │   ├── templates/index.html          # Dynamic theming via CSS custom properties
- │   ├── knowledge_pdfs/
- │   │   ├── nhs/                     # NHS/NICE guidelines (6 PDFs)
- │   │   ├── us_aha/                  # AHA/ACC guidelines (README with sources)
- │   │   └── congenital_achd/         # ESC 2020 + ACC/AHA 2025 ACHD guidelines
- │   └── test_pdfs/                   # Dummy referral files for testing
- │       ├── patient_referral_[1-5].txt
- │       ├── patient_referral_achd_[1-2].txt
- │       └── patient_referral_us_1.txt
- ├── tests/
- │   ├── test_config_loader.py        # 54 tests (no ML deps required)
- │   ├── test_anonymizer.py           # 26 tests (no ML deps required)
- │   ├── test_guideline_accuracy.py   # 46 tests verifying guideline currency
- │   ├── test_kb_chroma.py            # 16 tests (no ML deps required)
- │   ├── test_risk_assessor.py        # 27 tests (requires spacy)
- │   ├── test_recommendation.py       # 31 tests (requires torch + transformers)
- │   ├── test_processor.py            # 10 tests (requires ML deps)
- │   └── test_flask_app.py            # 33 tests (Flask tests skip without ML)
- ├── requirements.txt
- └── README.md
 
- 4. Supported Frameworks & Scopes
+  Supported Frameworks & Scopes
 
  NHS UK (nhs_uk):
  - Urgency levels: EMERGENCY / URGENT / ROUTINE
@@ -71,23 +35,7 @@ The AI model streamlines this process by summarizing key patient information and
  - Adds 13 surgical indicators: Fontan revision, pulmonary valve replacement, Ebstein repair, etc.
  - Based on: ESC 2020 Adult CHD Guidelines + ACC/AHA 2025 ACHD Guidelines
 
- 5. API Endpoints
-
- ┌────────┬────────────────────────┬─────────────────────────────────────────────────────────────────┐
- │ Method │        Endpoint        │                           Description                           │
- ├────────┼────────────────────────┼─────────────────────────────────────────────────────────────────┤
- │ GET    │ /                      │ Frontend UI                                                     │
- ├────────┼────────────────────────┼─────────────────────────────────────────────────────────────────┤
- │ GET    │ /health                │ Health check with framework + scope list                        │
- ├────────┼────────────────────────┼─────────────────────────────────────────────────────────────────┤
- │ GET    │ /frameworks            │ List available frameworks and scopes                            │
- ├────────┼────────────────────────┼─────────────────────────────────────────────────────────────────┤
- │ GET    │ /framework-config/<id> │ Branding/display config for a framework                         │
- ├────────┼────────────────────────┼─────────────────────────────────────────────────────────────────┤
- │ POST   │ /process               │ Upload PDF/TXT for triage (accepts framework and scopes fields) │
- └────────┴────────────────────────┴─────────────────────────────────────────────────────────────────┘
-
- 6. Setup & Running
+Setup & Running
 
  # Create venv (Python 3.11 recommended for ML deps)
  python -m venv .venv
