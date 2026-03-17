@@ -9,41 +9,138 @@ This AI tool is designed to assist cardiovascular surgeons within the NHS in the
 
 The AI model streamlines this process by summarizing key patient information and highlighting critical issues and a suggested plan of action (with three levels currently: Routine, Urgent, Emergency), enabling surgeons to quickly identify cases that require urgent attention or further investigation, including potential surgery. While a surgeon reviewing the information remains essential and is required for final decision-making, this tool shoudl hopefully reduce the time spent reviewing referrals and enhances clinical efficiency by focusing attention on the most relevant data.
 
-Structure:
-- backend/: core processing modules (anonymizer, pdf parsing, risk assessor, recommendation engine, processor)
-- frontend/: Flask app and template for uploading PDFs
+## Updated app structure
+ 3. Directory Structure (full tree)
 
-Privacy & Compliance:
-- PII is redacted before any analysis, and patient files are deleted after processing.
-- Patient identifiers are hashed using SHA-256. Only the hash is logged.
-- Audit logs contain only the hashed patient ID (Not shown here, but will pop up once the project is running).
-- AI Model's Knowledge base stems from NHS and NICE documentation.
-- GitHub Workflows include Security Checks to combat any security issues with library vulnerabilities.
-- Use of local AI Model, Transformer Models, and embedding (no external API call) in actual document processing (must be downloaded to the local machine)
+ nhs_processor/
+ ├── backend/
+ │   ├── config/
+ │   │   ├── frameworks/
+ │   │   │   ├── nhs_uk.json          # NHS UK framework (urgency, clinical terms, PII, branding, models)
+ │   │   │   └── us_aha.json          # US AHA/ACC framework
+ │   │   └── scopes/
+ │   │       └── congenital_achd.json # ACHD scope overlay
+ │   ├── config_loader.py             # load_framework(), list_frameworks(), list_scopes()
+ │   ├── anonymizer.py                # Config-driven PII redaction
+ │   ├── kb_chroma.py                 # Multi-collection ChromaDB interface
+ │   ├── ingest_kb.py                 # CLI: python -m backend.ingest_kb --collection X --folder Y
+ │   ├── risk_assessor.py             # Config-driven triage scoring
+ │   ├── recommendation.py            # Config-driven recommendation engine
+ │   └── processor.py                 # Orchestrator (MedicalDocumentProcessor)
+ ├── frontend/
+ │   ├── app.py                       # Flask app with /frameworks, /framework-config, /process
+ │   ├── templates/index.html          # Dynamic theming via CSS custom properties
+ │   ├── knowledge_pdfs/
+ │   │   ├── nhs/                     # NHS/NICE guidelines (6 PDFs)
+ │   │   ├── us_aha/                  # AHA/ACC guidelines (README with sources)
+ │   │   └── congenital_achd/         # ESC 2020 + ACC/AHA 2025 ACHD guidelines
+ │   └── test_pdfs/                   # Dummy referral files for testing
+ │       ├── patient_referral_[1-5].txt
+ │       ├── patient_referral_achd_[1-2].txt
+ │       └── patient_referral_us_1.txt
+ ├── tests/
+ │   ├── test_config_loader.py        # 54 tests (no ML deps required)
+ │   ├── test_anonymizer.py           # 26 tests (no ML deps required)
+ │   ├── test_guideline_accuracy.py   # 46 tests verifying guideline currency
+ │   ├── test_kb_chroma.py            # 16 tests (no ML deps required)
+ │   ├── test_risk_assessor.py        # 27 tests (requires spacy)
+ │   ├── test_recommendation.py       # 31 tests (requires torch + transformers)
+ │   ├── test_processor.py            # 10 tests (requires ML deps)
+ │   └── test_flask_app.py            # 33 tests (Flask tests skip without ML)
+ ├── requirements.txt
+ └── README.md
 
-# Create venv and install
-python -m venv .venv; pip install -r requirements.txt
+ 4. Supported Frameworks & Scopes
 
-# You should have the following 
+ NHS UK (nhs_uk):
+ - Urgency levels: EMERGENCY / URGENT / ROUTINE
+ - 26 red flags, 12 surgical indicators
+ - PII: NHS Number, UK postcodes redacted
+ - Guidelines: NICE CG95, NG185, NG208, NG106, NG238; NHS England Cardiac Surgery Specification (Jul 2024); DTAC (updated Feb 2026)
+ - Branding: NHS blue (#005EB8)
 
-- BioGPT (by Microsoft: https://github.com/microsoft/BioGPT)
-- env configurations set for transformers if needed
-- env configurations for OCR PDF reading (Tesseract)
-- Every library in the requirements.txt file
+ US AHA/ACC (us_aha):
+ - Urgency levels: EMERGENT / URGENT / ELECTIVE
+ - 32 red flags (adds tamponade, flash pulmonary edema, LVAD, CABG, MCS)
+ - PII: SSN, MRN, ZIP codes redacted
+ - Guidelines: AHA/ACC 2025 ACS, 2020 VHD, 2022 HF, 2021 Chest Pain
+ - Branding: AHA red (#C8102E)
 
-# Run frontend demo (Via VS Code CLI or similar)
-Run python frontend\app.py OR similar 
+ ACHD Scope (congenital_achd) — overlays any framework:
+ - Adds 14 red flags: Eisenmenger syndrome, Fontan failure, protein-losing enteropathy, plastic bronchitis, single-ventricle arrhythmia, conduit obstruction, etc.
+ - Adds 13 surgical indicators: Fontan revision, pulmonary valve replacement, Ebstein repair, etc.
+ - Based on: ESC 2020 Adult CHD Guidelines + ACC/AHA 2025 ACHD Guidelines
 
+ 5. API Endpoints
 
-# Tech stack
+ ┌────────┬────────────────────────┬─────────────────────────────────────────────────────────────────┐
+ │ Method │        Endpoint        │                           Description                           │
+ ├────────┼────────────────────────┼─────────────────────────────────────────────────────────────────┤
+ │ GET    │ /                      │ Frontend UI                                                     │
+ ├────────┼────────────────────────┼─────────────────────────────────────────────────────────────────┤
+ │ GET    │ /health                │ Health check with framework + scope list                        │
+ ├────────┼────────────────────────┼─────────────────────────────────────────────────────────────────┤
+ │ GET    │ /frameworks            │ List available frameworks and scopes                            │
+ ├────────┼────────────────────────┼─────────────────────────────────────────────────────────────────┤
+ │ GET    │ /framework-config/<id> │ Branding/display config for a framework                         │
+ ├────────┼────────────────────────┼─────────────────────────────────────────────────────────────────┤
+ │ POST   │ /process               │ Upload PDF/TXT for triage (accepts framework and scopes fields) │
+ └────────┴────────────────────────┴─────────────────────────────────────────────────────────────────┘
 
-- BioGPT (by Microsoft: https://github.com/microsoft/BioGPT) + BART (https://huggingface.co/docs/transformers/en/model_doc/bart)
-- Python (adhering to DTAC NHS guidelines, model context, patient data types (usually strings), NLP, RAG, Transformers, etc).
-- OCR/PDF storage (RAG again) with ChromaDB Vector Database (with an open source embedding model) + txt files for testing
-- Flask app for API route handling
-- Simple HTML front end
+ 6. Setup & Running
 
-use of github copilot (GPT 5 mini) + Claude 4.5 Sonnet
+ # Create venv (Python 3.11 recommended for ML deps)
+ python -m venv .venv
+ .venv/Scripts/activate  # Windows
+
+ pip install -r requirements.txt
+
+ # Install spacy model
+ python -m spacy download en_core_web_sm
+
+ # Ingest knowledge base (per collection)
+ python -m backend.ingest_kb --collection nhs_kb --folder frontend/knowledge_pdfs/nhs
+ python -m backend.ingest_kb --collection us_aha_kb --folder frontend/knowledge_pdfs/us_aha
+ python -m backend.ingest_kb --collection congenital_achd_kb --folder frontend/knowledge_pdfs/congenital_achd
+
+ # Run the Flask app
+ python frontend/app.py
+
+ 7. Running Tests
+
+ # Run all tests (ML tests auto-skip if deps not available)
+ pytest tests/ -v
+
+ # Run only no-ML-required tests
+ pytest tests/test_config_loader.py tests/test_anonymizer.py tests/test_guideline_accuracy.py tests/test_kb_chroma.py -v
+
+ 248 total tests; 164 pass without ML deps, 84 skip gracefully.
+
+ 8. Adding a New Framework
+
+ 1. Create backend/config/frameworks/<new_id>.json following the NHS/US schema
+ 2. Add guidelines PDFs to frontend/knowledge_pdfs/<new_id>/
+ 3. Ingest: python -m backend.ingest_kb --collection <new_id>_kb --folder ...
+ 4. Select in UI or pass framework=<new_id> in the POST request
+
+ 9. Privacy & Compliance
+
+ - PII redacted before analysis (region-specific patterns from framework config)
+ - Patient IDs SHA-256 hashed; only hash logged
+ - Files deleted after processing
+ - Local ML models only — no external API calls during document processing
+ - DTAC (updated Feb 2026), NHS Records Management Code, HIPAA (US framework)
+ - GitHub CodeQL security workflow active
+
+ 10. Tech Stack
+
+ - BioGPT-Large (Microsoft) — medical reasoning
+ - BART-large-cnn (Facebook) — summarization
+ - all-MiniLM-L6-v2 — sentence embeddings
+ - ChromaDB — multi-collection vector database
+ - spaCy (en_core_web_sm) — NLP/NER
+ - Flask — REST API
+ - Tesseract/pytesseract — OCR PDF parsing
 
 # Future Improvements
 
@@ -85,7 +182,7 @@ More info about NHS technology guidelines can be found online. This project adhe
 
 **If you use this project, please build upon it for the greater good of its original intent (used as a tool, cardiovascular surgeons are required to review the information. It is a tool and should be used as such). Feel free to work on this project, clone it, understand it, improve it, etc. Please cite the author of this Repo when doing so (Bhargav Ashok)**
 
-Last edit: 10/31/2025 (Updated README)
+Last edit: 3/17/2026
 
 
 
