@@ -286,13 +286,68 @@ class ClinicalRecommendationEngine:
 
         return self._fallback_recommendation(t)
 
+    # ---------- SIGNAL EXTRACTION FROM MODEL OUTPUT ----------
+
+    # Clinical signal phrases to detect in BioGPT free-text output.
+    # Grouped by severity so we can score them.
+    _EMERGENCY_SIGNAL_PHRASES = [
+        "immediate", "emergency", "life-threatening", "life threatening",
+        "cardiogenic shock", "cardiac arrest", "aortic dissection",
+        "type a dissection", "stemi", "st-elevation", "st elevation",
+        "vf arrest", "vt storm", "cardiac tamponade", "haemodynamic instability",
+        "hemodynamic instability", "pulmonary embolism", "acute heart failure",
+        "rupture", "acute coronary", "ongoing ischemia", "ongoing ischaemia",
+    ]
+
+    _URGENT_SIGNAL_PHRASES = [
+        "urgent", "expedited", "priority", "prompt",
+        "nstemi", "unstable angina", "troponin", "raised troponin",
+        "syncope", "presyncope", "severe stenosis", "critical stenosis",
+        "severe regurgitation", "heart failure", "decompensated",
+        "endocarditis", "vegetation", "embolic", "rapid deterioration",
+        "worsening symptoms", "nyha class iii", "nyha class iv",
+        "reduced ejection fraction", "lvef", "ef <", "ef<",
+    ]
+
+    _ROUTINE_SIGNAL_PHRASES = [
+        "routine", "elective", "outpatient", "stable", "monitoring",
+        "conservative", "follow-up", "follow up", "reassess",
+        "non-urgent", "watchful waiting", "mild", "asymptomatic",
+    ]
+
+    def _extract_model_signals(self, model_text: str) -> dict:
+        """Parse BioGPT free-text output for clinical signal phrases.
+
+        Returns dict with keys: emergency_hits, urgent_hits, routine_hits (lists of matched phrases),
+        and raw_reasoning (cleaned model text).
+        """
+        t = model_text.lower()
+        emergency_hits = [p for p in self._EMERGENCY_SIGNAL_PHRASES if p in t]
+        urgent_hits = [p for p in self._URGENT_SIGNAL_PHRASES if p in t]
+        routine_hits = [p for p in self._ROUTINE_SIGNAL_PHRASES if p in t]
+        return {
+            "emergency_hits": emergency_hits,
+            "urgent_hits": urgent_hits,
+            "routine_hits": routine_hits,
+            "raw_reasoning": model_text,
+        }
+
     def _try_biogpt_recommendation(self, text: str, context_snippets: Optional[List[Dict]] = None) -> Optional[Dict]:
-        """Generate recommendation using medical reasoning model with advanced prompting"""
+        """Generate recommendation using BioGPT for medical reasoning + rule-based structuring.
+
+        BioGPT is a biomedical text-completion model — it generates clinical prose,
+        not structured JSON. This method:
+        1. Prompts BioGPT to produce free-text clinical reasoning about the referral.
+        2. Extracts clinical signal phrases from that reasoning.
+        3. Combines model signals with rule-based scoring on the original text.
+        4. Builds the structured recommendation with the model's reasoning included.
+        """
         try:
             self._load_biogpt()
             if self._biogpt_model is None:
                 return None
 
+            # Build context from knowledge base snippets
             ctx = ""
             if context_snippets:
                 tops = []
@@ -300,29 +355,14 @@ class ClinicalRecommendationEngine:
                     meta = item.get("meta") or {}
                     src = meta.get("title") or meta.get("source") or "kb"
                     tops.append(f"[{src}] {item.get('text','')[:400]}")
-                ctx = "\n\nKB context:\n" + "\n---\n".join(tops)
+                ctx = "\nRelevant clinical guidelines:\n" + "\n---\n".join(tops)
 
-            # Build urgency level description from config
-            urgency_desc = (
-                f"Main Urgency levels are: {self._level_emergency} (immediate action), "
-                f"{self._level_urgent} (urgent assessment), {self._level_routine} (standard outpatient review). "
-            )
-
-            schema_hint = (
-                f"Return STRICT JSON with keys: recommendation_type, urgency, suggested_timeframe, "
-                f"red_flags, confidence_level, evidence_basis, reasoning. {self._schema_hint_suffix} "
-                f"{urgency_desc}"
-                f"Choose the most appropriate urgency based on the letter content and clinical guidelines. "
-                f"Make the output VERY neat."
-            )
-
+            # Prompt BioGPT for free-text clinical reasoning (what it's good at)
             prompt = (
-                f"{self._system_context}\n\n"
-                f"Letter text:\n{text[:1000]}\n"
+                f"Clinical referral letter for cardiovascular assessment:\n"
+                f"{text[:800]}\n"
                 f"{ctx}\n\n"
-                f"{schema_hint}\n"
-                f"Return STRICT JSON only.\n\n"
-                f"JSON Output:"
+                f"Clinical assessment: This patient presents with"
             )
 
             inputs = self._biogpt_tokenizer(
@@ -335,42 +375,75 @@ class ClinicalRecommendationEngine:
             with torch.no_grad():
                 outputs = self._biogpt_model.generate(
                     **inputs,
-                    max_length=inputs['input_ids'].shape[1] + 600,
+                    max_length=inputs['input_ids'].shape[1] + 256,
                     num_return_sequences=1,
                     temperature=0.0,
                     do_sample=False,
+                    repetition_penalty=1.3,
                     pad_token_id=self._biogpt_tokenizer.eos_token_id
                 )
 
-            response = self._biogpt_tokenizer.decode(outputs[0], skip_special_tokens=True)
-            response = self._sanitize_output(response)
+            # Decode only the generated tokens (strip the prompt echo)
+            generated_ids = outputs[0][inputs['input_ids'].shape[1]:]
+            reasoning_text = self._biogpt_tokenizer.decode(generated_ids, skip_special_tokens=True)
+            reasoning_text = self._sanitize_output(reasoning_text)
 
-            json_start = response.find('{')
-            json_end = response.rfind('}') + 1
+            if not reasoning_text or len(reasoning_text.strip()) < 10:
+                print("[AI] BioGPT produced insufficient output, will use rule-based fallback")
+                return None
 
-            valid_levels = {self._level_emergency, self._level_urgent, self._level_routine}
+            print(f"[AI] BioGPT reasoning ({len(reasoning_text)} chars): {reasoning_text[:120]}...")
 
-            if json_start >= 0 and json_end > json_start:
-                json_str = response[json_start:json_end]
-                rec = json.loads(json_str)
+            # Extract clinical signals from the model's reasoning
+            model_signals = self._extract_model_signals(reasoning_text)
 
-                if isinstance(rec, dict) and rec.get("urgency") in valid_levels:
-                    rec.setdefault("recommendation_type", "CARDIOVASCULAR_TRIAGE")
-                    rec.setdefault("suggested_timeframe", "")
-                    rec.setdefault("red_flags", [])
-                    rec.setdefault("confidence_level", "moderate")
-                    rec.setdefault("evidence_basis", self._evidence_basis)
-                    rec.setdefault("reasoning", "")
+            # Also run rule-based signal detection on the original text
+            rule_signals = self._rule_based_signals(text)
 
-                    for key, value in rec.items():
-                        if isinstance(value, str):
-                            rec[key] = self._sanitize_output(value)
-                        elif isinstance(value, list):
-                            rec[key] = [self._sanitize_output(str(v)) if isinstance(v, str) else v for v in value]
+            # Merge signals: model signals augment rule-based signals
+            all_red_flags = sorted(set(rule_signals["red_flags"] + model_signals["emergency_hits"] + model_signals["urgent_hits"]))
 
-                    return rec
+            # Score: combine rule-based and model-derived signals
+            score = 0.0
+            score += 5.0 * len(model_signals["emergency_hits"])
+            score += 2.0 * len(model_signals["urgent_hits"])
+            score -= 0.5 * len(model_signals["routine_hits"])
+            score += 3.0 * len(rule_signals["emergency_flags"])
+            score += 1.5 * len(rule_signals["urgent_flags"])
 
-            return None
+            # Determine urgency from combined score
+            if score >= 5.0 or model_signals["emergency_hits"]:
+                urgency = self._level_emergency
+                timeframe = self._timeframes.get("emergency",
+                    "Immediate escalation via local emergency protocol (ED/cardiology).")
+                confidence = "high" if score >= 8.0 else "moderate"
+            elif score >= 2.0 or model_signals["urgent_hits"]:
+                urgency = self._level_urgent
+                timeframe = self._timeframes.get("urgent",
+                    "Urgent assessment within 2 weeks, aligned to NICE ACS/chest-pain pathways.")
+                confidence = "moderate"
+            else:
+                urgency = self._level_routine
+                timeframe = self._timeframes.get("routine",
+                    "Routine outpatient review and non-invasive diagnostics.")
+                confidence = "moderate" if model_signals["routine_hits"] else "cautious"
+
+            # Build the structured recommendation with model reasoning
+            reasoning_summary = f"This patient presents with {reasoning_text.strip()}"
+            # Truncate if excessively long
+            if len(reasoning_summary) > 800:
+                reasoning_summary = reasoning_summary[:797] + "..."
+
+            return {
+                "recommendation_type": "CARDIOVASCULAR_TRIAGE",
+                "urgency": urgency,
+                "suggested_timeframe": timeframe,
+                "red_flags": all_red_flags,
+                "confidence_level": confidence,
+                "evidence_basis": self._evidence_basis,
+                "reasoning": reasoning_summary,
+                "model_contributed": True,
+            }
 
         except RuntimeError as e:
             if "CUDA" in str(e) or "out of memory" in str(e).lower():
@@ -382,6 +455,62 @@ class ClinicalRecommendationEngine:
         except Exception as e:
             warnings.warn(f"Medical reasoning recommendation failed: {e}")
             return None
+
+    def _rule_based_signals(self, text: str) -> dict:
+        """Extract clinical signal categories from original referral text using keyword matching."""
+        t = (text or "").lower()
+
+        def has(*phrases):
+            return any(p in t for p in phrases)
+
+        emergency_flags = []
+        urgent_flags = []
+        red_flags = []
+
+        # Emergency-level signals
+        if has("aortic dissection", "tearing chest pain", "mediastinal widening"):
+            emergency_flags.append("suspected aortic dissection")
+        if has("haemodynamic instability", "hemodynamic instability", "hypotension", "shock", "cardiogenic shock"):
+            emergency_flags.append("haemodynamic compromise")
+        if has("ongoing chest pain", "rest pain", "pain at rest"):
+            emergency_flags.append("ongoing/rest chest pain")
+        if has("stemi", "st-elevation", "st elevation myocardial"):
+            emergency_flags.append("STEMI")
+        if has("cardiac arrest", "vf arrest", "vt storm"):
+            emergency_flags.append("cardiac arrest/malignant arrhythmia")
+
+        # Urgent-level signals
+        if has("nstemi", "raised troponin", "elevated troponin", "myocardial infarction"):
+            urgent_flags.append("possible ACS")
+        if has("syncope", "presyncope", "blackout", "collapse"):
+            urgent_flags.append("syncope/presyncope")
+        if has("severe aortic stenosis", "critical aortic stenosis"):
+            urgent_flags.append("severe aortic stenosis")
+        if has("infective endocarditis", "endocarditis", "vegetation"):
+            urgent_flags.append("suspected endocarditis")
+        if has("urgent surgical referral", "urgent cardiothoracic referral"):
+            urgent_flags.append("urgent surgical referral mentioned")
+        if has("decompensated heart failure", "acute heart failure", "pulmonary oedema", "pulmonary edema"):
+            urgent_flags.append("decompensated heart failure")
+
+        red_flags = emergency_flags + urgent_flags
+
+        # ACHD/congenital signals from config scope overlays
+        fallback_signals = self.config.get("fallback_signals", {})
+        for phrase in fallback_signals.get("emergency", []):
+            if phrase.lower() in t:
+                emergency_flags.append(f"ACHD: {phrase}")
+                red_flags.append(f"ACHD: {phrase}")
+        for phrase in fallback_signals.get("urgent", []):
+            if phrase.lower() in t:
+                urgent_flags.append(f"ACHD: {phrase}")
+                red_flags.append(f"ACHD: {phrase}")
+
+        return {
+            "emergency_flags": emergency_flags,
+            "urgent_flags": urgent_flags,
+            "red_flags": red_flags,
+        }
 
     # ---------- FALLBACKS ----------
 
@@ -466,7 +595,8 @@ class ClinicalRecommendationEngine:
             "red_flags": signals,
             "confidence_level": "cautious",
             "evidence_basis": self._evidence_basis,
-            "reasoning": "Heuristic offline triage used because model output was unavailable or invalid; signals mapped to conservative escalation."
+            "reasoning": "Rule-based triage: model was unavailable; signals mapped to conservative escalation.",
+            "model_contributed": False,
         }
 
     # Public alias so callers can use either name
