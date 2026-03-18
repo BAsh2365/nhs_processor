@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -44,9 +45,10 @@ const urgencyStyles: Record<string, { bg: string; border: string; text: string; 
 };
 
 export default function TriagePage() {
+  const searchParams = useSearchParams();
   const [frameworks, setFrameworks] = useState<Framework[]>([]);
   const [scopes, setScopes] = useState<Scope[]>([]);
-  const [selectedFramework, setSelectedFramework] = useState("nhs_uk");
+  const [selectedFramework, setSelectedFramework] = useState(searchParams.get("framework") || "nhs_uk");
   const [selectedScopes, setSelectedScopes] = useState<string[]>([]);
   const [file, setFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
