@@ -1,6 +1,7 @@
 # frontend/app.py
 
-from flask import Flask, request, jsonify, render_template, session, redirect, url_for
+from flask import Flask, request, jsonify, session
+from flask_cors import CORS
 from werkzeug.utils import secure_filename
 from functools import wraps
 import os
@@ -22,6 +23,10 @@ from backend.logger import NHSComplianceLogger  # noqa: E402
 def create_app():
     """Application factory for WSGI servers (gunicorn, waitress)."""
     app = Flask(__name__)
+    
+    # Enable CORS for all domains (safe for local desktop app, lock down in production if needed)
+    CORS(app, supports_credentials=True)
+
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
     # Secret key for session signing — generate once, store in .env for persistence
@@ -107,7 +112,7 @@ def create_app():
             # Not authenticated
             if request.is_json or request.headers.get('X-API-Key'):
                 return jsonify({'status': 'error', 'error': 'Unauthorized — provide a valid X-API-Key header'}), 401
-            return redirect(url_for('login_page'))
+            return jsonify({'status': 'error', 'error': 'Unauthorized'}), 401
 
         return decorated
 
@@ -139,16 +144,10 @@ def create_app():
 
     # ── Auth routes ────────────────────────────────────────────────────
 
-    @app.route('/login', methods=['GET'])
-    def login_page():
-        if not AUTH_ENABLED:
-            return redirect(url_for('index'))
-        return render_template('login.html')
-
     @app.route('/login', methods=['POST'])
     def login_submit():
         if not AUTH_ENABLED:
-            return redirect(url_for('index'))
+            return jsonify({'status': 'ok', 'message': 'Auth disabled'})
 
         password = ''
         if request.is_json:
@@ -164,31 +163,37 @@ def create_app():
                 patient_id_hash="N/A",
                 user_id=request.remote_addr,
             )
-            if request.is_json:
-                return jsonify({'status': 'ok'})
-            return redirect(url_for('index'))
+            return jsonify({'status': 'ok'})
 
         _audit_logger.log_access(
             action="LOGIN_FAILED",
             patient_id_hash="N/A",
             user_id=request.remote_addr,
         )
-        if request.is_json:
-            return jsonify({'status': 'error', 'error': 'Invalid credentials'}), 401
-        return render_template('login.html', error='Invalid API key'), 401
+        return jsonify({'status': 'error', 'error': 'Invalid credentials'}), 401
 
-    @app.route('/logout')
+    @app.route('/logout', methods=['POST'])
     def logout():
         session.clear()
-        return redirect(url_for('login_page'))
+        return jsonify({'status': 'ok'})
 
     # ── Application routes ─────────────────────────────────────────────
 
     @app.route('/')
-    @require_auth
     def index():
-        """Home page"""
-        return render_template('index.html')
+        """API Root"""
+        return jsonify({
+            "name": "NHS Medical Document Processor API",
+            "version": "1.0.0",
+            "status": "online",
+            "endpoints": [
+                "/health",
+                "/frameworks",
+                "/framework-config/<id>",
+                "/process",
+                "/login"
+            ]
+        })
 
     @app.route('/frameworks', methods=['GET'])
     @require_auth
