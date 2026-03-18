@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -198,7 +198,7 @@ function BloodTestVisualBar({ test }: { test: BloodTest }) {
 // MAIN PAGE
 // ════════════════════════════════════════════════════════════
 
-export default function TriagePage() {
+function TriagePageContent() {
   const searchParams = useSearchParams();
   const [frameworks, setFrameworks] = useState<Framework[]>([]);
   const [scopes, setScopes] = useState<Scope[]>([]);
@@ -788,5 +788,13 @@ export default function TriagePage() {
         </Alert>
       )}
     </div>
+  );
+}
+
+export default function TriagePage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center py-20 text-slate-400">Loading...</div>}>
+      <TriagePageContent />
+    </Suspense>
   );
 }
