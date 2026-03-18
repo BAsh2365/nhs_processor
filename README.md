@@ -1,6 +1,6 @@
 Medical Document Processor Framework for Cardiovascular Issues (Personal Project/Framework) - Modularized Demo (MVP) 
 
-**Note: I am NOT affiliated with the NHS NOR THE AHA. This is just a project I have made using online, open-source PDFs and Guidelines from the NHS and NICE. It is a framework for my thought process in how to use AI within Medical systems (considering ethical implications, technology guidelines, and other confounding factors). Results still need to be fine-tuned; it is NOT COMPLETE, it is NOT completely foolproof/tested, it is an unfinished idea/framework.**
+**Note: I am NOT affiliated with the NHS NOR THE AHA. This is just a project I have made using online, open-source PDFs and Guidelines. It is a framework for my thought process in how to use AI within Medical systems (considering ethical implications, technology guidelines, and other confounding factors). Results still need to be fine-tuned; it is NOT COMPLETE, it is NOT completely foolproof/tested, it is an unfinished idea/framework.**
 
 This workspace contains an MVP version of the NHS medical document processor demo. AI-code assisted project with Github Copilot (By Bhargav Ashok, used GPT-5 mini and Claude 4.5 Sonnet in VS Code IDE + Claude Website, and Claude Code CLI for creation of project with iteration done by the codeowner). Still a Work in Progress. It is NOT a full-fledged finished Product. It is a Personal Interest Project/Framework as stated above. **There is no actual patient data used; only dummy data is used for testing**.
 
