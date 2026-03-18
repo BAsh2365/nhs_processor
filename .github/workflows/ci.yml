@@ -56,10 +56,7 @@ jobs:
           python -m spacy download en_core_web_sm
 
       - name: Run tests
-        run: python -m pytest tests/ -v --tb=short -q
-
-      - name: Verify app imports cleanly
-        run: python -c "from frontend.app import create_app; app = create_app(); print('OK')"
+        run: python -m pytest tests/ -v --tb=short
 
   # ── Docker Build & Push ─────────────────────────────────────────────
   docker:

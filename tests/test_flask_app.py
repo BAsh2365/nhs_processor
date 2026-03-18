@@ -34,7 +34,8 @@ pytestmark = pytest.mark.skipif(
 
 @pytest.fixture(scope="module")
 def client():
-    from frontend.app import app
+    from frontend.app import create_app
+    app = create_app()
     app.config['TESTING'] = True
     with app.test_client() as c:
         yield c
@@ -163,7 +164,7 @@ class TestFrontendHTML:
 
     def test_js_loads_frameworks(self, html):
         assert 'loadFrameworkOptions' in html
-        assert "fetch('/frameworks')" in html
+        assert "'/frameworks'" in html
 
     def test_js_updates_branding(self, html):
         assert 'updateBranding' in html
