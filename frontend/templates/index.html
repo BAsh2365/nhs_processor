@@ -8,12 +8,17 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-           Design System — Dark theme inspired by Linear, Vercel, Stripe
-           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+        /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+           Design System — Dark theme, Linear / Vercel / Stripe inspired
+           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
+            /* Framework-driven (overwritten by JS) */
+            --primary-color: #005EB8;
+            --secondary-color: #003087;
+            --success-color: #007F3B;
+
             /* Backgrounds */
             --bg-root: #09090b;
             --bg-surface: #111113;
@@ -32,11 +37,8 @@
             --text-muted: #71717a;
             --text-faint: #52525b;
 
-            /* Accent (Blue) */
-            --accent: #3b82f6;
-            --accent-hover: #2563eb;
-            --accent-subtle: rgba(59,130,246,0.1);
-            --accent-border: rgba(59,130,246,0.25);
+            /* Accent */
+            --accent: var(--primary-color);
 
             /* Status */
             --success: #22c55e;
@@ -54,28 +56,20 @@
             --purple: #a78bfa;
 
             /* Layout */
-            --sidebar-width: 260px;
-            --header-height: 56px;
+            --sidebar-w: 260px;
+            --header-h: 56px;
             --radius: 12px;
             --radius-sm: 8px;
             --radius-xs: 6px;
-
-            /* Transitions */
-            --ease: cubic-bezier(0.4, 0, 0.2, 1);
-
-            /* Dynamic accent (overridden per framework) */
-            --framework-accent: var(--accent);
-            --framework-accent-hover: var(--accent-hover);
-            --framework-accent-subtle: var(--accent-subtle);
+            --ease: cubic-bezier(0.4,0,0.2,1);
         }
 
-        html { height: 100%; }
+        html, body { height: 100%; }
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
             background: var(--bg-root);
             color: var(--text);
-            min-height: 100vh;
             display: flex;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
@@ -83,90 +77,86 @@
             line-height: 1.5;
         }
 
-        /* ── Scrollbar ──────────────────────────────────────────── */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--border-hover); }
 
-        /* ━━━ SIDEBAR ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+        /* ━━━ SIDEBAR ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
         .sidebar {
-            width: var(--sidebar-width);
+            width: var(--sidebar-w);
             height: 100vh;
             position: fixed;
-            top: 0;
-            left: 0;
+            top: 0; left: 0;
             background: var(--bg-surface);
             border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
             z-index: 100;
-            transition: transform 0.3s var(--ease);
+            transition: transform .3s var(--ease);
         }
 
-        .sidebar-header {
+        .sidebar-hdr {
             padding: 16px 20px;
             border-bottom: 1px solid var(--border-subtle);
             display: flex;
             align-items: center;
             gap: 12px;
-            min-height: var(--header-height);
+            min-height: var(--header-h);
         }
 
         .sidebar-logo {
-            width: 32px;
-            height: 32px;
-            background: linear-gradient(135deg, var(--framework-accent) 0%, var(--purple) 100%);
-            border-radius: 9px;
+            width: 34px; height: 34px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--purple) 100%);
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
+            transition: background .3s var(--ease);
         }
 
-        .sidebar-logo svg {
-            width: 18px;
-            height: 18px;
-            color: white;
-        }
+        .sidebar-logo svg { width: 18px; height: 18px; color: #fff; }
 
-        .sidebar-brand {
-            flex: 1;
-            min-width: 0;
-        }
+        .sidebar-brand { flex: 1; min-width: 0; }
 
         .sidebar-brand h1 {
             font-size: 14px;
             font-weight: 700;
             color: var(--text);
-            letter-spacing: -0.02em;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            letter-spacing: -.02em;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .sidebar-brand h1 .logo-chip {
+            font-size: 10px;
+            font-weight: 800;
+            background: var(--primary-color);
+            color: #fff;
+            padding: 1px 6px;
+            border-radius: 4px;
+            letter-spacing: .04em;
+            transition: background .3s var(--ease);
         }
 
         .sidebar-brand span {
             font-size: 11px;
             color: var(--text-muted);
-            font-weight: 400;
         }
 
-        .sidebar-nav {
-            flex: 1;
-            overflow-y: auto;
-            padding: 12px;
-        }
+        .sidebar-nav { flex: 1; overflow-y: auto; padding: 12px; }
 
-        .nav-section {
-            margin-bottom: 24px;
-        }
+        .nav-section { margin-bottom: 24px; }
 
         .nav-section-label {
             font-size: 11px;
             font-weight: 600;
             color: var(--text-faint);
             text-transform: uppercase;
-            letter-spacing: 0.06em;
+            letter-spacing: .06em;
             padding: 0 8px;
             margin-bottom: 6px;
         }
@@ -181,7 +171,7 @@
             font-size: 13px;
             font-weight: 500;
             cursor: pointer;
-            transition: all 0.12s var(--ease);
+            transition: all .12s var(--ease);
             user-select: none;
             text-decoration: none;
             border: none;
@@ -190,26 +180,12 @@
             text-align: left;
         }
 
-        .nav-item:hover {
-            background: var(--bg-hover);
-            color: var(--text-secondary);
-        }
-
-        .nav-item.active {
-            background: var(--bg-hover);
-            color: var(--text);
-        }
-
-        .nav-item svg {
-            width: 16px;
-            height: 16px;
-            flex-shrink: 0;
-            opacity: 0.6;
-        }
-
+        .nav-item:hover { background: var(--bg-hover); color: var(--text-secondary); }
+        .nav-item.active { background: var(--bg-hover); color: var(--text); }
+        .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; opacity: .6; }
         .nav-item.active svg { opacity: 1; }
 
-        .nav-item .badge-count {
+        .nav-badge {
             margin-left: auto;
             background: var(--bg-active);
             color: var(--text-muted);
@@ -221,37 +197,25 @@
             text-align: center;
         }
 
-        /* Status indicator */
         .status-dot {
-            width: 7px;
-            height: 7px;
+            width: 7px; height: 7px;
             border-radius: 50%;
             flex-shrink: 0;
         }
 
         .status-dot--green {
             background: var(--success);
-            box-shadow: 0 0 8px rgba(34,197,94,0.4);
+            box-shadow: 0 0 8px rgba(34,197,94,.4);
         }
 
-        .status-dot--yellow {
-            background: var(--warning);
-            box-shadow: 0 0 8px rgba(245,158,11,0.4);
-        }
-
-        /* Sidebar footer */
         .sidebar-footer {
             padding: 12px;
             border-top: 1px solid var(--border-subtle);
         }
 
-        .sidebar-footer .nav-item {
-            color: var(--text-muted);
-        }
-
-        /* ━━━ MAIN CONTENT ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+        /* ━━━ MAIN ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
         .main {
-            margin-left: var(--sidebar-width);
+            margin-left: var(--sidebar-w);
             flex: 1;
             min-height: 100vh;
             display: flex;
@@ -260,32 +224,20 @@
 
         /* Header */
         .header {
-            height: var(--header-height);
+            height: var(--header-h);
             border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 0 28px;
-            background: var(--bg-root);
             position: sticky;
             top: 0;
             z-index: 50;
             backdrop-filter: blur(12px);
-            background: rgba(9,9,11,0.8);
+            background: rgba(9,9,11,.8);
         }
 
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .header-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text);
-            letter-spacing: -0.01em;
-        }
+        .header-left { display: flex; align-items: center; gap: 16px; }
 
         .header-breadcrumb {
             display: flex;
@@ -297,11 +249,7 @@
         .header-breadcrumb span { color: var(--text-muted); }
         .header-breadcrumb .sep { color: var(--text-faint); }
 
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+        .header-right { display: flex; align-items: center; gap: 8px; }
 
         .mobile-menu-btn {
             display: none;
@@ -316,8 +264,7 @@
         .mobile-menu-btn:hover { background: var(--bg-hover); }
         .mobile-menu-btn svg { width: 20px; height: 20px; }
 
-        /* Header actions */
-        .header-btn {
+        .hdr-btn {
             display: inline-flex;
             align-items: center;
             gap: 6px;
@@ -326,57 +273,40 @@
             font-size: 13px;
             font-weight: 500;
             font-family: inherit;
-            cursor: pointer;
-            transition: all 0.12s var(--ease);
-            border: 1px solid var(--border);
-            background: var(--bg-elevated);
-            color: var(--text-secondary);
-            text-decoration: none;
-        }
-
-        .header-btn:hover {
-            background: var(--bg-hover);
-            color: var(--text);
-            border-color: var(--border-hover);
-        }
-
-        .header-btn svg { width: 14px; height: 14px; }
-
-        .header-btn--status {
+            cursor: default;
             border: none;
             background: var(--success-bg);
             color: var(--success);
-            gap: 8px;
-            cursor: default;
         }
 
-        /* ━━━ CONTENT AREA ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+        .hdr-btn svg { width: 14px; height: 14px; }
+
+        /* ━━━ PAGE CONTENT ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
         .content {
             flex: 1;
             padding: 32px 28px;
-            max-width: 960px;
+            max-width: 980px;
             width: 100%;
         }
 
-        /* Page sections */
+        .page-hero { margin-bottom: 28px; }
+
         .page-title {
             font-size: 22px;
             font-weight: 700;
-            color: var(--text);
-            letter-spacing: -0.03em;
+            letter-spacing: -.03em;
             margin-bottom: 4px;
         }
 
         .page-desc {
             font-size: 14px;
             color: var(--text-muted);
-            margin-bottom: 28px;
         }
 
-        /* ── Stats Row ──────────────────────────────────────────── */
+        /* ── Stats ────────────────────────────────────────────── */
         .stats-row {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 12px;
             margin-bottom: 28px;
         }
@@ -386,14 +316,13 @@
             border: 1px solid var(--border);
             border-radius: var(--radius);
             padding: 18px 20px;
-            transition: border-color 0.15s var(--ease);
+            transition: border-color .15s var(--ease);
         }
 
         .stat-card:hover { border-color: var(--border-hover); }
 
         .stat-label {
-            font-size: 12px;
-            font-weight: 500;
+            font-size: 12px; font-weight: 500;
             color: var(--text-muted);
             margin-bottom: 6px;
             display: flex;
@@ -401,81 +330,99 @@
             gap: 6px;
         }
 
-        .stat-label svg { width: 14px; height: 14px; opacity: 0.5; }
+        .stat-label svg { width: 14px; height: 14px; opacity: .5; }
 
         .stat-value {
             font-size: 26px;
             font-weight: 700;
-            color: var(--text);
-            letter-spacing: -0.03em;
+            letter-spacing: -.03em;
             line-height: 1;
         }
 
-        .stat-value span {
+        .stat-value small {
             font-size: 13px;
             font-weight: 500;
             color: var(--text-muted);
-            margin-left: 4px;
+            margin-left: 2px;
         }
 
-        /* ── Configuration Section ─────────────────────────────── */
-        .config-section {
+        /* ── Disclaimer ───────────────────────────────────────── */
+        .disclaimer {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px 18px;
+            background: var(--warning-bg);
+            border: 1px solid var(--warning-border);
+            border-radius: var(--radius);
+            margin-bottom: 24px;
+        }
+
+        .disclaimer svg { width: 16px; height: 16px; color: var(--warning); flex-shrink: 0; margin-top: 1px; }
+
+        .disclaimer-text { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
+        .disclaimer-text strong { color: var(--warning); font-weight: 600; }
+
+        /* ── Card ──────────────────────────────────────────────── */
+        .card {
             background: var(--bg-surface);
             border: 1px solid var(--border);
             border-radius: var(--radius);
             padding: 24px;
             margin-bottom: 20px;
+            transition: border-color .15s var(--ease);
         }
 
-        .config-header {
+        .card:hover { border-color: var(--border-hover); }
+
+        .card-hdr {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 20px;
+            margin-bottom: 18px;
             cursor: pointer;
         }
 
-        .config-header h3 {
+        .card-hdr h3 {
             font-size: 14px;
             font-weight: 600;
-            color: var(--text);
             display: flex;
             align-items: center;
             gap: 8px;
         }
 
-        .config-header h3 svg { width: 16px; height: 16px; color: var(--text-muted); }
+        .card-hdr h3 svg { width: 16px; height: 16px; color: var(--text-muted); }
 
-        .config-toggle {
-            width: 20px;
-            height: 20px;
+        .card-hdr .toggle-icon {
+            width: 18px; height: 18px;
             color: var(--text-muted);
-            transition: transform 0.2s var(--ease);
+            transition: transform .2s var(--ease);
         }
 
-        .config-toggle.collapsed { transform: rotate(-90deg); }
+        .card-hdr .toggle-icon.collapsed { transform: rotate(-90deg); }
 
-        .config-body {
+        /* ── Configuration ─────────────────────────────────────── */
+        .config-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 16px;
         }
 
-        .config-body.hidden { display: none; }
+        .config-grid.hidden { display: none; }
 
-        .config-field label {
+        .field-label {
             display: block;
             font-size: 12px;
             font-weight: 500;
             color: var(--text-muted);
-            margin-bottom: 6px;
             text-transform: uppercase;
-            letter-spacing: 0.04em;
+            letter-spacing: .04em;
+            margin-bottom: 6px;
         }
 
-        .config-field select {
+        .field-select {
             width: 100%;
-            padding: 9px 12px;
+            padding: 9px 32px 9px 12px;
             border: 1px solid var(--border);
             border-radius: var(--radius-xs);
             font-size: 13px;
@@ -488,22 +435,15 @@
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
             background-position: right 12px center;
-            padding-right: 32px;
-            transition: border-color 0.15s, box-shadow 0.15s;
+            transition: border-color .15s, box-shadow .15s;
         }
 
-        .config-field select:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px var(--accent-subtle);
+        .field-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(59,130,246,.12);
         }
 
-        .scope-checkboxes {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            padding-top: 4px;
-        }
-
+        /* Scope chips */
         .scope-chip {
             display: inline-flex;
             align-items: center;
@@ -513,95 +453,59 @@
             border-radius: var(--radius-xs);
             background: var(--bg-root);
             cursor: pointer;
-            transition: all 0.15s var(--ease);
+            transition: all .15s var(--ease);
             font-size: 13px;
             color: var(--text-secondary);
             user-select: none;
         }
 
-        .scope-chip:hover {
-            border-color: var(--border-hover);
-            background: var(--bg-hover);
-        }
+        .scope-chip:hover { border-color: var(--border-hover); background: var(--bg-hover); }
 
         .scope-chip.selected {
-            border-color: var(--accent-border);
-            background: var(--accent-subtle);
-            color: var(--accent);
+            border-color: rgba(59,130,246,.3);
+            background: rgba(59,130,246,.08);
+            color: #60a5fa;
         }
 
         .scope-chip input { display: none; }
 
-        .scope-chip .check-icon {
-            width: 14px;
-            height: 14px;
+        .scope-chip .chk {
+            width: 14px; height: 14px;
             border: 1.5px solid var(--border-hover);
             border-radius: 4px;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.15s var(--ease);
+            transition: all .15s var(--ease);
         }
 
-        .scope-chip.selected .check-icon {
-            background: var(--accent);
-            border-color: var(--accent);
-        }
-
-        .scope-chip.selected .check-icon svg { opacity: 1; }
-        .scope-chip .check-icon svg { width: 10px; height: 10px; color: white; opacity: 0; }
+        .scope-chip.selected .chk { background: #3b82f6; border-color: #3b82f6; }
+        .scope-chip .chk svg { width: 10px; height: 10px; color: #fff; opacity: 0; }
+        .scope-chip.selected .chk svg { opacity: 1; }
 
         /* ── Upload Zone ───────────────────────────────────────── */
-        .upload-card {
-            background: var(--bg-surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 24px;
-            margin-bottom: 20px;
-        }
-
-        .upload-card h3 {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text);
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .upload-card h3 svg { width: 16px; height: 16px; color: var(--text-muted); }
-
         .upload-zone {
             border: 1.5px dashed var(--border);
             border-radius: var(--radius);
             padding: 48px 24px;
             text-align: center;
             cursor: pointer;
-            transition: all 0.2s var(--ease);
+            transition: all .2s var(--ease);
             position: relative;
         }
 
-        .upload-zone:hover {
-            border-color: var(--border-hover);
-            background: var(--bg-hover);
-        }
-
-        .upload-zone.drag-over {
-            border-color: var(--accent);
-            background: var(--accent-subtle);
-        }
+        .upload-zone:hover { border-color: var(--border-hover); background: var(--bg-hover); }
+        .upload-zone.drag-over { border-color: var(--primary-color); background: rgba(59,130,246,.06); }
 
         .upload-zone.has-file {
             border-style: solid;
-            border-color: var(--accent-border);
-            background: var(--accent-subtle);
+            border-color: rgba(59,130,246,.3);
+            background: rgba(59,130,246,.04);
             padding: 20px 24px;
         }
 
         .upload-icon {
-            width: 44px;
-            height: 44px;
+            width: 44px; height: 44px;
             background: var(--bg-elevated);
             border: 1px solid var(--border);
             border-radius: 12px;
@@ -612,29 +516,12 @@
         }
 
         .upload-icon svg { width: 20px; height: 20px; color: var(--text-muted); }
+        .upload-zone.drag-over .upload-icon { background: rgba(59,130,246,.08); border-color: rgba(59,130,246,.25); }
+        .upload-zone.drag-over .upload-icon svg { color: var(--primary-color); }
 
-        .upload-zone.drag-over .upload-icon {
-            background: var(--accent-subtle);
-            border-color: var(--accent-border);
-        }
-
-        .upload-zone.drag-over .upload-icon svg { color: var(--accent); }
-
-        .upload-text {
-            font-size: 14px;
-            color: var(--text-secondary);
-            margin-bottom: 4px;
-        }
-
-        .upload-text strong {
-            color: var(--accent);
-            font-weight: 600;
-        }
-
-        .upload-hint {
-            font-size: 12px;
-            color: var(--text-muted);
-        }
+        .upload-text { font-size: 14px; color: var(--text-secondary); margin-bottom: 4px; }
+        .upload-text strong { color: #60a5fa; font-weight: 600; }
+        .upload-hint { font-size: 12px; color: var(--text-muted); }
 
         .upload-zone input[type="file"] {
             position: absolute;
@@ -643,7 +530,7 @@
             cursor: pointer;
         }
 
-        /* File preview inside upload zone */
+        /* File preview */
         .file-preview {
             display: flex;
             align-items: center;
@@ -652,8 +539,7 @@
         }
 
         .file-icon {
-            width: 40px;
-            height: 40px;
+            width: 40px; height: 40px;
             background: var(--bg-elevated);
             border: 1px solid var(--border);
             border-radius: var(--radius-sm);
@@ -663,27 +549,19 @@
             flex-shrink: 0;
         }
 
-        .file-icon svg { width: 18px; height: 18px; color: var(--accent); }
+        .file-icon svg { width: 18px; height: 18px; color: #60a5fa; }
 
         .file-info { flex: 1; min-width: 0; }
 
         .file-name {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            font-size: 13px; font-weight: 600;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
 
-        .file-size {
-            font-size: 12px;
-            color: var(--text-muted);
-        }
+        .file-size { font-size: 12px; color: var(--text-muted); }
 
         .file-remove {
-            width: 28px;
-            height: 28px;
+            width: 28px; height: 28px;
             border-radius: 6px;
             border: none;
             background: var(--bg-active);
@@ -692,7 +570,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.12s var(--ease);
+            transition: all .12s var(--ease);
             flex-shrink: 0;
         }
 
@@ -703,15 +581,15 @@
         .process-btn {
             width: 100%;
             padding: 12px 20px;
-            background: var(--framework-accent);
-            color: white;
+            background: var(--primary-color);
+            color: #fff;
             border: none;
             border-radius: var(--radius-sm);
             font-size: 14px;
             font-weight: 600;
             font-family: inherit;
             cursor: pointer;
-            transition: all 0.15s var(--ease);
+            transition: all .15s var(--ease);
             margin-top: 16px;
             display: flex;
             align-items: center;
@@ -723,67 +601,43 @@
 
         .process-btn::before {
             content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+            position: absolute; inset: 0;
+            background: linear-gradient(180deg, rgba(255,255,255,.1) 0%, transparent 100%);
             pointer-events: none;
         }
 
         .process-btn:hover:not(:disabled) {
-            background: var(--framework-accent-hover);
-            box-shadow: 0 0 24px rgba(59,130,246,0.25);
+            filter: brightness(1.1);
+            box-shadow: 0 0 24px rgba(59,130,246,.2);
             transform: translateY(-1px);
         }
 
-        .process-btn:active:not(:disabled) {
-            transform: translateY(0) scale(0.995);
-            box-shadow: none;
-        }
-
-        .process-btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
-
+        .process-btn:active:not(:disabled) { transform: translateY(0) scale(.995); box-shadow: none; }
+        .process-btn:disabled { opacity: .4; cursor: not-allowed; }
         .process-btn svg { width: 16px; height: 16px; }
 
-        /* ── Processing State ──────────────────────────────────── */
+        /* ── Processing ────────────────────────────────────────── */
         .processing-card {
-            background: var(--bg-surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 40px 32px;
             text-align: center;
+            padding: 40px 32px;
             display: none;
-            margin-bottom: 20px;
         }
 
         .processing-card.visible { display: block; }
 
         .processing-spinner {
-            width: 48px;
-            height: 48px;
+            width: 48px; height: 48px;
             border: 3px solid var(--border);
-            border-top-color: var(--framework-accent);
+            border-top-color: var(--primary-color);
             border-radius: 50%;
-            animation: spin 0.8s linear infinite;
+            animation: spin .8s linear infinite;
             margin: 0 auto 24px;
         }
 
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        .processing-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--text);
-            margin-bottom: 8px;
-        }
-
-        .processing-subtitle {
-            font-size: 13px;
-            color: var(--text-muted);
-            margin-bottom: 28px;
-        }
+        .processing-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+        .processing-subtitle { font-size: 13px; color: var(--text-muted); margin-bottom: 28px; }
 
         .processing-steps {
             display: flex;
@@ -802,67 +656,60 @@
             border-radius: var(--radius-xs);
             font-size: 13px;
             color: var(--text-muted);
-            transition: all 0.3s var(--ease);
+            transition: all .3s var(--ease);
         }
 
-        .processing-step .step-icon {
-            width: 20px;
-            height: 20px;
+        .processing-step .step-dot {
+            width: 20px; height: 20px;
             border-radius: 50%;
             border: 1.5px solid var(--border);
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
-            transition: all 0.3s var(--ease);
+            transition: all .3s var(--ease);
         }
 
-        .processing-step .step-icon svg { width: 10px; height: 10px; display: none; }
+        .processing-step .step-dot svg { width: 10px; height: 10px; display: none; }
 
         .processing-step.active {
             color: var(--text);
             background: var(--bg-hover);
         }
 
-        .processing-step.active .step-icon {
-            border-color: var(--accent);
-            background: var(--accent-subtle);
+        .processing-step.active .step-dot {
+            border-color: var(--primary-color);
+            background: rgba(59,130,246,.1);
         }
 
-        .processing-step.active .step-icon::after {
+        .processing-step.active .step-dot::after {
             content: '';
-            width: 6px;
-            height: 6px;
-            background: var(--accent);
+            width: 6px; height: 6px;
+            background: var(--primary-color);
             border-radius: 50%;
             animation: pulse 1.2s ease infinite;
         }
 
         @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(0.7); }
+            0%,100% { opacity: 1; transform: scale(1); }
+            50% { opacity: .5; transform: scale(.7); }
         }
 
-        .processing-step.done {
-            color: var(--text-secondary);
-        }
+        .processing-step.done { color: var(--text-secondary); }
 
-        .processing-step.done .step-icon {
+        .processing-step.done .step-dot {
             border-color: var(--success);
             background: var(--success-bg);
         }
 
-        .processing-step.done .step-icon::after { display: none; }
-        .processing-step.done .step-icon svg { display: block; color: var(--success); }
+        .processing-step.done .step-dot::after { display: none; }
+        .processing-step.done .step-dot svg { display: block; color: var(--success); }
 
         /* ── Results ───────────────────────────────────────────── */
-        .results-section {
-            display: none;
-        }
-
+        .results-section { display: none; }
         .results-section.visible { display: block; }
 
-        /* Urgency Banner */
+        /* Urgency banner (all framework variants) */
         .urgency-banner {
             border-radius: var(--radius);
             padding: 24px 28px;
@@ -870,42 +717,28 @@
             display: flex;
             align-items: center;
             gap: 20px;
-            position: relative;
-            overflow: hidden;
         }
 
-        .urgency-banner::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            opacity: 0.04;
-            pointer-events: none;
-        }
-
-        .urgency-banner--emergency {
+        /* NHS: EMERGENCY / URGENT / ROUTINE */
+        .urgency-emergency,
+        .urgency-emergent {
             background: var(--danger-bg);
             border: 1px solid var(--danger-border);
         }
 
-        .urgency-banner--emergency::before { background: var(--danger); }
-
-        .urgency-banner--urgent {
+        .urgency-urgent {
             background: var(--orange-bg);
             border: 1px solid var(--orange-border);
         }
 
-        .urgency-banner--urgent::before { background: var(--orange); }
-
-        .urgency-banner--routine {
+        .urgency-routine,
+        .urgency-elective {
             background: var(--success-bg);
             border: 1px solid var(--success-border);
         }
 
-        .urgency-banner--routine::before { background: var(--success); }
-
-        .urgency-icon {
-            width: 52px;
-            height: 52px;
+        .urgency-icon-box {
+            width: 52px; height: 52px;
             border-radius: 14px;
             display: flex;
             align-items: center;
@@ -913,40 +746,38 @@
             flex-shrink: 0;
         }
 
-        .urgency-banner--emergency .urgency-icon { background: rgba(239,68,68,0.15); }
-        .urgency-banner--urgent .urgency-icon { background: rgba(249,115,22,0.15); }
-        .urgency-banner--routine .urgency-icon { background: rgba(34,197,94,0.15); }
+        .urgency-icon-box svg { width: 24px; height: 24px; }
 
-        .urgency-icon svg { width: 24px; height: 24px; }
+        .urgency-emergency .urgency-icon-box,
+        .urgency-emergent  .urgency-icon-box { background: rgba(239,68,68,.12); }
+        .urgency-emergency .urgency-icon-box svg,
+        .urgency-emergent  .urgency-icon-box svg { color: var(--danger); }
 
-        .urgency-banner--emergency .urgency-icon svg { color: var(--danger); }
-        .urgency-banner--urgent .urgency-icon svg { color: var(--orange); }
-        .urgency-banner--routine .urgency-icon svg { color: var(--success); }
+        .urgency-urgent .urgency-icon-box { background: rgba(249,115,22,.12); }
+        .urgency-urgent .urgency-icon-box svg { color: var(--orange); }
 
-        .urgency-content { flex: 1; }
+        .urgency-routine .urgency-icon-box,
+        .urgency-elective .urgency-icon-box { background: rgba(34,197,94,.12); }
+        .urgency-routine .urgency-icon-box svg,
+        .urgency-elective .urgency-icon-box svg { color: var(--success); }
+
+        .urgency-body { flex: 1; }
 
         .urgency-level {
-            font-size: 18px;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-            margin-bottom: 2px;
+            font-size: 18px; font-weight: 700; letter-spacing: -.02em; margin-bottom: 2px;
         }
 
-        .urgency-banner--emergency .urgency-level { color: var(--danger); }
-        .urgency-banner--urgent .urgency-level { color: var(--orange); }
-        .urgency-banner--routine .urgency-level { color: var(--success); }
+        .urgency-emergency .urgency-level,
+        .urgency-emergent  .urgency-level { color: var(--danger); }
+        .urgency-urgent    .urgency-level { color: var(--orange); }
+        .urgency-routine   .urgency-level,
+        .urgency-elective  .urgency-level { color: var(--success); }
 
-        .urgency-timeframe {
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
+        .urgency-timeframe { font-size: 13px; color: var(--text-secondary); }
 
-        .urgency-meta {
-            text-align: right;
-            flex-shrink: 0;
-        }
+        .urgency-meta { text-align: right; flex-shrink: 0; }
 
-        .confidence-badge {
+        .conf-badge {
             display: inline-flex;
             align-items: center;
             gap: 5px;
@@ -959,24 +790,35 @@
             color: var(--text-secondary);
         }
 
-        .confidence-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-        }
+        .conf-dot { width: 6px; height: 6px; border-radius: 50%; }
+        .conf-dot--high { background: var(--success); }
+        .conf-dot--moderate { background: var(--warning); }
+        .conf-dot--cautious { background: var(--orange); }
 
-        .confidence-dot--high { background: var(--success); }
-        .confidence-dot--moderate { background: var(--warning); }
-        .confidence-dot--cautious { background: var(--orange); }
-
-        .model-source {
+        .model-src {
             font-size: 11px;
             color: var(--text-muted);
             margin-top: 6px;
             font-family: 'JetBrains Mono', monospace;
         }
 
-        /* Result Cards Grid */
+        /* Framework badge in results */
+        .result-framework-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 100px;
+            font-size: 11px;
+            font-weight: 700;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            letter-spacing: .03em;
+            margin-left: 12px;
+        }
+
+        /* Result cards */
         .results-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -989,51 +831,31 @@
             border: 1px solid var(--border);
             border-radius: var(--radius);
             padding: 22px 24px;
-            transition: border-color 0.15s var(--ease);
+            transition: border-color .15s var(--ease);
         }
 
         .result-card:hover { border-color: var(--border-hover); }
+        .result-card--full { grid-column: 1 / -1; }
 
-        .result-card--full {
-            grid-column: 1 / -1;
-        }
-
-        .result-card-header {
+        .result-card-hdr {
             display: flex;
             align-items: center;
             gap: 8px;
             margin-bottom: 14px;
         }
 
-        .result-card-header svg { width: 16px; height: 16px; color: var(--text-muted); }
+        .result-card-hdr svg { width: 16px; height: 16px; color: var(--text-muted); }
 
-        .result-card-header h4 {
+        .result-card-hdr h4 {
             font-size: 13px;
             font-weight: 600;
             color: var(--text-secondary);
-            letter-spacing: 0.01em;
         }
 
-        .result-card-body {
-            font-size: 14px;
-            color: var(--text);
-            line-height: 1.65;
-        }
+        .result-card-body { font-size: 14px; line-height: 1.65; }
 
-        .result-card-body p {
-            margin-bottom: 8px;
-        }
-
-        .result-card-body p:last-child {
-            margin-bottom: 0;
-        }
-
-        /* Red flag chips */
-        .flag-chips {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
+        /* Flags */
+        .flag-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 
         .flag-chip {
             display: inline-flex;
@@ -1045,21 +867,10 @@
             font-weight: 500;
         }
 
-        .flag-chip--red {
-            background: var(--danger-bg);
-            border: 1px solid var(--danger-border);
-            color: #fca5a5;
-        }
-
-        .flag-chip--orange {
-            background: var(--orange-bg);
-            border: 1px solid var(--orange-border);
-            color: #fdba74;
-        }
-
+        .flag-chip--red { background: var(--danger-bg); border: 1px solid var(--danger-border); color: #fca5a5; }
+        .flag-chip--orange { background: var(--orange-bg); border: 1px solid var(--orange-border); color: #fdba74; }
         .flag-chip svg { width: 10px; height: 10px; }
 
-        /* Evidence text */
         .evidence-text {
             font-size: 13px;
             color: var(--text-secondary);
@@ -1067,7 +878,6 @@
             white-space: pre-wrap;
         }
 
-        /* Reasoning box */
         .reasoning-box {
             background: var(--bg-root);
             border: 1px solid var(--border-subtle);
@@ -1081,8 +891,7 @@
             overflow-y: auto;
         }
 
-        /* New analysis btn */
-        .new-analysis-btn {
+        .new-btn {
             display: inline-flex;
             align-items: center;
             gap: 8px;
@@ -1095,15 +904,11 @@
             font-weight: 600;
             font-family: inherit;
             cursor: pointer;
-            transition: all 0.15s var(--ease);
+            transition: all .15s var(--ease);
         }
 
-        .new-analysis-btn:hover {
-            background: var(--bg-hover);
-            border-color: var(--border-hover);
-        }
-
-        .new-analysis-btn svg { width: 14px; height: 14px; }
+        .new-btn:hover { background: var(--bg-hover); border-color: var(--border-hover); }
+        .new-btn svg { width: 14px; height: 14px; }
 
         /* ── Error Banner ──────────────────────────────────────── */
         .error-banner {
@@ -1115,123 +920,52 @@
             display: none;
             align-items: flex-start;
             gap: 14px;
-            animation: fadeIn 0.3s var(--ease);
+            animation: fadeIn .3s var(--ease);
         }
 
         .error-banner.visible { display: flex; }
-
         .error-banner svg { width: 18px; height: 18px; color: var(--danger); flex-shrink: 0; margin-top: 1px; }
 
-        .error-banner-content h4 {
-            font-size: 14px;
-            font-weight: 600;
-            color: #fca5a5;
-            margin-bottom: 2px;
-        }
+        .error-banner h4 { font-size: 14px; font-weight: 600; color: #fca5a5; margin-bottom: 2px; }
+        .error-banner p { font-size: 13px; color: var(--text-secondary); }
 
-        .error-banner-content p {
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
-
-        /* ── Disclaimer ────────────────────────────────────────── */
-        .disclaimer {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            padding: 16px 20px;
-            background: var(--warning-bg);
-            border: 1px solid var(--warning-border);
-            border-radius: var(--radius);
-            margin-bottom: 28px;
-        }
-
-        .disclaimer svg { width: 16px; height: 16px; color: var(--warning); flex-shrink: 0; margin-top: 1px; }
-
-        .disclaimer-text {
-            font-size: 12px;
-            color: var(--text-secondary);
-            line-height: 1.6;
-        }
-
-        .disclaimer-text strong { color: var(--warning); font-weight: 600; }
-
-        /* ── History sidebar (within page) ─────────────────────── */
-        .history-section {
-            margin-top: 32px;
-            padding-top: 24px;
-            border-top: 1px solid var(--border);
-        }
-
-        .history-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 16px;
-        }
-
-        .history-header h3 {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .history-header h3 svg { width: 16px; height: 16px; color: var(--text-muted); }
-
-        .history-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
+        /* ── History Page ──────────────────────────────────────── */
+        .history-list { display: flex; flex-direction: column; gap: 8px; }
 
         .history-item {
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 12px 14px;
+            padding: 14px 16px;
             background: var(--bg-surface);
             border: 1px solid var(--border);
             border-radius: var(--radius-sm);
             cursor: pointer;
-            transition: all 0.12s var(--ease);
+            transition: all .12s var(--ease);
         }
 
-        .history-item:hover {
-            border-color: var(--border-hover);
-            background: var(--bg-elevated);
-        }
+        .history-item:hover { border-color: var(--border-hover); background: var(--bg-elevated); }
 
-        .history-urgency-dot {
-            width: 8px;
-            height: 8px;
+        .history-dot {
+            width: 8px; height: 8px;
             border-radius: 50%;
             flex-shrink: 0;
         }
 
-        .history-urgency-dot--emergency { background: var(--danger); }
-        .history-urgency-dot--urgent { background: var(--orange); }
-        .history-urgency-dot--routine { background: var(--success); }
+        .history-dot--emergency, .history-dot--emergent { background: var(--danger); }
+        .history-dot--urgent { background: var(--orange); }
+        .history-dot--routine, .history-dot--elective { background: var(--success); }
 
         .history-info { flex: 1; min-width: 0; }
 
-        .history-filename {
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+        .history-name {
+            font-size: 13px; font-weight: 500;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
 
-        .history-meta {
-            font-size: 11px;
-            color: var(--text-muted);
-        }
+        .history-meta { font-size: 11px; color: var(--text-muted); }
 
-        .history-urgency-label {
+        .history-tag {
             font-size: 11px;
             font-weight: 600;
             padding: 2px 8px;
@@ -1239,16 +973,66 @@
             flex-shrink: 0;
         }
 
-        .history-urgency-label--emergency { background: var(--danger-bg); color: #fca5a5; border: 1px solid var(--danger-border); }
-        .history-urgency-label--urgent { background: var(--orange-bg); color: #fdba74; border: 1px solid var(--orange-border); }
-        .history-urgency-label--routine { background: var(--success-bg); color: #86efac; border: 1px solid var(--success-border); }
+        .history-tag--emergency, .history-tag--emergent { background: var(--danger-bg); color: #fca5a5; border: 1px solid var(--danger-border); }
+        .history-tag--urgent { background: var(--orange-bg); color: #fdba74; border: 1px solid var(--orange-border); }
+        .history-tag--routine, .history-tag--elective { background: var(--success-bg); color: #86efac; border: 1px solid var(--success-border); }
 
-        .history-empty {
-            padding: 24px;
+        .empty-state {
+            padding: 48px 24px;
             text-align: center;
             color: var(--text-muted);
             font-size: 13px;
         }
+
+        .empty-state svg {
+            width: 40px; height: 40px;
+            color: var(--text-faint);
+            margin-bottom: 16px;
+        }
+
+        /* ── Settings Page ─────────────────────────────────────── */
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .setting-item {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px 22px;
+        }
+
+        .setting-item h4 {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .setting-item p {
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .setting-value {
+            margin-top: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 10px;
+            background: var(--bg-root);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xs);
+            font-size: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-secondary);
+        }
+
+        .setting-value .dot { width: 6px; height: 6px; border-radius: 50%; }
+        .setting-value .dot--green { background: var(--success); }
+        .setting-value .dot--blue { background: #3b82f6; }
 
         /* ── Animations ────────────────────────────────────────── */
         @keyframes fadeIn {
@@ -1261,441 +1045,421 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .animate-in {
-            animation: fadeInUp 0.4s var(--ease) both;
-        }
+        .anim { animation: fadeInUp .4s var(--ease) both; }
+        .anim:nth-child(1) { animation-delay: 0ms; }
+        .anim:nth-child(2) { animation-delay: 50ms; }
+        .anim:nth-child(3) { animation-delay: 100ms; }
+        .anim:nth-child(4) { animation-delay: 150ms; }
+        .anim:nth-child(5) { animation-delay: 200ms; }
 
-        .animate-in:nth-child(1) { animation-delay: 0ms; }
-        .animate-in:nth-child(2) { animation-delay: 60ms; }
-        .animate-in:nth-child(3) { animation-delay: 120ms; }
-        .animate-in:nth-child(4) { animation-delay: 180ms; }
-        .animate-in:nth-child(5) { animation-delay: 240ms; }
-
-        /* ── Responsive ────────────────────────────────────────── */
+        /* ── Overlay ───────────────────────────────────────────── */
         .sidebar-overlay {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,.5);
             z-index: 99;
         }
 
+        .sidebar-overlay.visible { display: block; }
+
+        /* ── Responsive ────────────────────────────────────────── */
         @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-            }
-
-            .sidebar.open {
-                transform: translateX(0);
-            }
-
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
             .sidebar-overlay.visible { display: block; }
-
-            .main {
-                margin-left: 0;
-            }
-
+            .main { margin-left: 0; }
             .mobile-menu-btn { display: flex; }
-
             .content { padding: 20px 16px; }
-
-            .stats-row {
-                grid-template-columns: 1fr;
-            }
-
-            .config-body {
-                grid-template-columns: 1fr;
-            }
-
-            .results-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .urgency-banner {
-                flex-direction: column;
-                text-align: center;
-                gap: 12px;
-            }
-
+            .stats-row { grid-template-columns: 1fr 1fr; }
+            .config-grid, .results-grid, .settings-grid { grid-template-columns: 1fr; }
+            .result-card--full { grid-column: 1; }
+            .urgency-banner { flex-direction: column; text-align: center; gap: 12px; }
             .urgency-meta { text-align: center; }
         }
 
         @media (max-width: 480px) {
             .header { padding: 0 16px; }
-            .header-btn--status span { display: none; }
+            .stats-row { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
-    <!-- Sidebar overlay for mobile -->
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-    <!-- ━━━ SIDEBAR ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <!-- ━━━ SIDEBAR ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
     <aside class="sidebar" id="sidebar">
-        <div class="sidebar-header">
+        <div class="sidebar-hdr">
             <div class="sidebar-logo">
                 <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
                 </svg>
             </div>
             <div class="sidebar-brand">
-                <h1 id="sidebarTitle">CardioTriage AI</h1>
-                <span id="sidebarSubtitle">NHS UK Framework</span>
+                <h1>
+                    CardioTriage
+                    <span class="logo-chip" id="logo-text">NHS</span>
+                </h1>
+                <span id="subtitle-text">AI-Powered Cardiovascular Referral Triage System</span>
             </div>
         </div>
 
         <nav class="sidebar-nav">
             <div class="nav-section">
                 <div class="nav-section-label">Workspace</div>
-                <button class="nav-item active" data-view="triage" onclick="switchView('triage')">
-                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15a2.25 2.25 0 012.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z"/>
-                    </svg>
+                <button class="nav-item active" data-page="dashboard" onclick="goPage('dashboard')">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25a2.25 2.25 0 01-2.25-2.25v-2.25z"/></svg>
+                    Dashboard
+                </button>
+                <button class="nav-item" data-page="triage" onclick="goPage('triage')">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15a2.25 2.25 0 012.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z"/></svg>
                     New Triage
                 </button>
-                <button class="nav-item" data-view="history" onclick="switchView('history')">
-                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
+                <button class="nav-item" data-page="history" onclick="goPage('history')">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     History
-                    <span class="badge-count" id="historyCount">0</span>
+                    <span class="nav-badge" id="historyCount">0</span>
                 </button>
             </div>
 
             <div class="nav-section">
                 <div class="nav-section-label">System</div>
-                <div class="nav-item">
+                <button class="nav-item" data-page="settings" onclick="goPage('settings')">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    Settings
+                </button>
+                <div class="nav-item" style="cursor:default">
                     <span class="status-dot status-dot--green"></span>
                     Local Models Active
                 </div>
-                <div class="nav-item" id="gpuStatusNav">
-                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 002.25-2.25V6.75a2.25 2.25 0 00-2.25-2.25H6.75A2.25 2.25 0 004.5 6.75v10.5a2.25 2.25 0 002.25 2.25z"/>
-                    </svg>
-                    <span id="gpuStatusText">Checking GPU...</span>
+                <div class="nav-item" id="gpuNav" style="cursor:default">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 002.25-2.25V6.75a2.25 2.25 0 00-2.25-2.25H6.75A2.25 2.25 0 004.5 6.75v10.5a2.25 2.25 0 002.25 2.25z"/></svg>
+                    <span id="gpuText">Checking...</span>
                 </div>
             </div>
         </nav>
 
         <div class="sidebar-footer">
             <a href="/logout" class="nav-item">
-                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/>
-                </svg>
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/></svg>
                 Sign Out
             </a>
         </div>
     </aside>
 
-    <!-- ━━━ MAIN ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+    <!-- ━━━ MAIN ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
     <div class="main">
-        <!-- Header -->
         <header class="header">
             <div class="header-left">
                 <button class="mobile-menu-btn" onclick="toggleSidebar()">
-                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/>
-                    </svg>
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>
                 </button>
                 <div class="header-breadcrumb">
-                    <span id="headerFramework">NHS UK</span>
+                    <span id="hdrFramework">NHS UK</span>
                     <span class="sep">/</span>
-                    <span id="headerView">New Triage</span>
+                    <span id="hdrPage">Dashboard</span>
                 </div>
             </div>
             <div class="header-right">
-                <div class="header-btn header-btn--status">
+                <div class="hdr-btn">
                     <span class="status-dot status-dot--green"></span>
-                    <span>Local AI</span>
+                    Local AI
                 </div>
             </div>
         </header>
 
-        <!-- Content -->
         <div class="content">
-            <!-- Disclaimer -->
-            <div class="disclaimer">
-                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z"/>
-                </svg>
-                <div class="disclaimer-text">
-                    <strong>Research demonstration only.</strong> All triage outputs must be validated by a qualified clinician before any clinical decision is made. This system does not replace professional medical judgement.
+            <!-- ═══════════════════════════════════════════════════
+                 PAGE: Dashboard
+                 ═══════════════════════════════════════════════════ -->
+            <div id="page-dashboard">
+                <div class="page-hero">
+                    <div class="page-title">Dashboard</div>
+                    <div class="page-desc">Session overview and quick triage access</div>
                 </div>
-            </div>
 
-            <!-- ── TRIAGE VIEW ────────────────────────────────── -->
-            <div id="triageView">
-                <!-- Stats -->
+                <div class="disclaimer">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z"/></svg>
+                    <div class="disclaimer-text">
+                        <strong>Research demonstration only.</strong> All triage outputs must be validated by a qualified clinician before any clinical decision is made.
+                    </div>
+                </div>
+
                 <div class="stats-row">
-                    <div class="stat-card animate-in">
+                    <div class="stat-card anim">
                         <div class="stat-label">
                             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
-                            Documents Processed
+                            Documents
                         </div>
-                        <div class="stat-value" id="statDocuments">0</div>
+                        <div class="stat-value" id="statDocs">0</div>
                     </div>
-                    <div class="stat-card animate-in">
+                    <div class="stat-card anim">
                         <div class="stat-label">
                             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z"/></svg>
-                            Red Flags Found
+                            Red Flags
                         </div>
-                        <div class="stat-value" id="statRedFlags">0</div>
+                        <div class="stat-value" id="statFlags">0</div>
                     </div>
-                    <div class="stat-card animate-in">
+                    <div class="stat-card anim">
                         <div class="stat-label">
                             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z"/></svg>
                             Avg Confidence
                         </div>
-                        <div class="stat-value" id="statConfidence">--<span>%</span></div>
+                        <div class="stat-value" id="statConf">--<small>%</small></div>
+                    </div>
+                    <div class="stat-card anim">
+                        <div class="stat-label">
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            Framework
+                        </div>
+                        <div class="stat-value" id="statFw" style="font-size:16px">NHS UK</div>
                     </div>
                 </div>
 
-                <!-- Configuration -->
-                <div class="config-section animate-in">
-                    <div class="config-header" onclick="toggleConfig()">
+                <!-- Quick actions -->
+                <div style="display:flex;gap:12px;flex-wrap:wrap;">
+                    <button class="process-btn" style="width:auto;padding:12px 28px" onclick="goPage('triage')">
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                        New Triage
+                    </button>
+                    <button class="new-btn" onclick="goPage('history')">
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        View History
+                    </button>
+                </div>
+            </div>
+
+            <!-- ═══════════════════════════════════════════════════
+                 PAGE: New Triage
+                 ═══════════════════════════════════════════════════ -->
+            <div id="page-triage" style="display:none">
+                <div class="page-hero">
+                    <div class="page-title">New Triage</div>
+                    <div class="page-desc">Upload a referral document for AI-powered clinical triage</div>
+                </div>
+
+                <!-- Config -->
+                <div class="card">
+                    <div class="card-hdr" onclick="toggleConfig()">
                         <h3>
-                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75"/>
-                            </svg>
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75"/></svg>
                             Configuration
                         </h3>
-                        <svg class="config-toggle" id="configToggle" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/>
-                        </svg>
+                        <svg class="toggle-icon" id="cfgToggle" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
                     </div>
-                    <div class="config-body" id="configBody">
-                        <div class="config-field">
-                            <label>Framework</label>
-                            <select id="frameworkSelect" onchange="onFrameworkChange()">
+                    <div class="config-grid" id="cfgBody">
+                        <div>
+                            <label class="field-label" for="framework-select">Framework</label>
+                            <select id="framework-select">
                                 <option value="nhs_uk">NHS UK Guidelines</option>
                             </select>
                         </div>
-                        <div class="config-field">
-                            <label>Clinical Scopes</label>
-                            <div class="scope-checkboxes" id="scopeCheckboxes">
-                                <!-- Populated dynamically -->
+                        <div>
+                            <label class="field-label">Clinical Scopes</label>
+                            <div id="scopes-container" style="display:flex;flex-wrap:wrap;gap:8px;padding-top:4px;">
+                                <!-- Populated by JS -->
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Upload -->
-                <div class="upload-card animate-in" id="uploadCard">
-                    <h3>
-                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
-                        </svg>
-                        Upload Document
-                    </h3>
+                <div class="card" id="uploadCard">
+                    <div class="card-hdr" style="cursor:default">
+                        <h3>
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
+                            Upload Document
+                        </h3>
+                    </div>
 
                     <div class="upload-zone" id="uploadZone">
                         <div id="uploadPrompt">
                             <div class="upload-icon">
-                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m6.75 12l-3-3m0 0l-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/>
-                                </svg>
+                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m6.75 12l-3-3m0 0l-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
                             </div>
-                            <div class="upload-text">
-                                Drop your referral document here, or <strong>browse</strong>
-                            </div>
+                            <div class="upload-text">Drop your referral document here, or <strong>browse</strong></div>
                             <div class="upload-hint">PDF or TXT, up to 16 MB</div>
                         </div>
-                        <div id="filePreview" class="file-preview" style="display:none;">
-                            <div class="file-icon">
-                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/>
-                                </svg>
-                            </div>
+                        <div id="filePreview" class="file-preview" style="display:none">
+                            <div class="file-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg></div>
                             <div class="file-info">
                                 <div class="file-name" id="fileName"></div>
                                 <div class="file-size" id="fileSize"></div>
                             </div>
-                            <button class="file-remove" onclick="clearFile(event)" title="Remove file">
-                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-                                </svg>
-                            </button>
+                            <button class="file-remove" onclick="clearFile(event)"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>
                         </div>
                         <input type="file" id="fileInput" accept=".pdf,.txt" onchange="onFileSelect(event)">
                     </div>
 
                     <button class="process-btn" id="processBtn" onclick="processDocument()" disabled>
-                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z"/>
-                        </svg>
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z"/></svg>
                         Analyse Document
                     </button>
                 </div>
 
                 <!-- Processing -->
-                <div class="processing-card" id="processingCard">
+                <div class="card processing-card" id="processingCard">
                     <div class="processing-spinner"></div>
                     <div class="processing-title">Analysing Document</div>
                     <div class="processing-subtitle">Running AI-powered clinical triage pipeline</div>
                     <div class="processing-steps">
-                        <div class="processing-step" id="step-extract">
-                            <div class="step-icon">
-                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
-                                </svg>
-                            </div>
-                            Extract text from document
-                        </div>
-                        <div class="processing-step" id="step-anonymise">
-                            <div class="step-icon">
-                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
-                                </svg>
-                            </div>
-                            Anonymise patient data
-                        </div>
-                        <div class="processing-step" id="step-kb">
-                            <div class="step-icon">
-                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
-                                </svg>
-                            </div>
-                            Query knowledge base
-                        </div>
-                        <div class="processing-step" id="step-reason">
-                            <div class="step-icon">
-                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
-                                </svg>
-                            </div>
-                            Generate clinical reasoning
-                        </div>
+                        <div class="processing-step" id="step-extract"><div class="step-dot"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg></div> Extract text from document</div>
+                        <div class="processing-step" id="step-anonymise"><div class="step-dot"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg></div> Anonymise patient data</div>
+                        <div class="processing-step" id="step-kb"><div class="step-dot"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg></div> Query knowledge base</div>
+                        <div class="processing-step" id="step-reason"><div class="step-dot"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg></div> Generate clinical reasoning</div>
                     </div>
                 </div>
 
                 <!-- Error -->
                 <div class="error-banner" id="errorBanner">
-                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
-                    </svg>
-                    <div class="error-banner-content">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>
+                    <div>
                         <h4>Processing Error</h4>
-                        <p id="errorMessage"></p>
+                        <p id="errorMsg"></p>
                     </div>
                 </div>
 
                 <!-- Results -->
                 <div class="results-section" id="resultsSection">
-                    <!-- Urgency Banner -->
-                    <div class="urgency-banner animate-in" id="urgencyBanner">
-                        <div class="urgency-icon" id="urgencyIcon">
-                            <!-- Dynamic icon -->
-                        </div>
-                        <div class="urgency-content">
+                    <div class="urgency-banner" id="urgencyBanner">
+                        <div class="urgency-icon-box" id="urgencyIconBox"></div>
+                        <div class="urgency-body">
                             <div class="urgency-level" id="urgencyLevel"></div>
-                            <div class="urgency-timeframe" id="urgencyTimeframe"></div>
+                            <div class="urgency-timeframe" id="urgencyTime"></div>
                         </div>
                         <div class="urgency-meta">
-                            <div class="confidence-badge">
-                                <span class="confidence-dot" id="confidenceDot"></span>
-                                <span id="confidenceText"></span>
+                            <div class="conf-badge">
+                                <span class="conf-dot" id="confDot"></span>
+                                <span id="confText"></span>
                             </div>
-                            <div class="model-source" id="modelSource"></div>
+                            <div class="model-src" id="modelSrc"></div>
                         </div>
+                        <span class="result-framework-badge" id="resultFrameworkBadge"></span>
                     </div>
 
-                    <!-- Result cards -->
                     <div class="results-grid">
-                        <div class="result-card result-card--full animate-in">
-                            <div class="result-card-header">
-                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/>
-                                </svg>
+                        <div class="result-card result-card--full anim">
+                            <div class="result-card-hdr">
+                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
                                 <h4>Clinical Summary</h4>
                             </div>
-                            <div class="result-card-body" id="clinicalSummary"></div>
+                            <div class="result-card-body" id="resSummary"></div>
                         </div>
-
-                        <div class="result-card animate-in">
-                            <div class="result-card-header">
-                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z"/>
-                                </svg>
+                        <div class="result-card anim">
+                            <div class="result-card-hdr">
+                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z"/></svg>
                                 <h4>Red Flags Identified</h4>
                             </div>
-                            <div class="result-card-body">
-                                <div class="flag-chips" id="redFlagChips"></div>
-                            </div>
+                            <div class="result-card-body"><div class="flag-chips" id="resFlags"></div></div>
                         </div>
-
-                        <div class="result-card animate-in">
-                            <div class="result-card-header">
-                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/>
-                                </svg>
+                        <div class="result-card anim">
+                            <div class="result-card-hdr">
+                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
                                 <h4>Evidence Basis</h4>
                             </div>
-                            <div class="result-card-body">
-                                <div class="evidence-text" id="evidenceBasis"></div>
-                            </div>
+                            <div class="result-card-body"><div class="evidence-text" id="resEvidence"></div></div>
                         </div>
-
-                        <div class="result-card result-card--full animate-in">
-                            <div class="result-card-header">
-                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
-                                </svg>
+                        <div class="result-card result-card--full anim">
+                            <div class="result-card-hdr">
+                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
                                 <h4>Clinical Reasoning</h4>
                             </div>
-                            <div class="result-card-body">
-                                <div class="reasoning-box" id="clinicalReasoning"></div>
-                            </div>
+                            <div class="result-card-body"><div class="reasoning-box" id="resReasoning"></div></div>
                         </div>
                     </div>
 
-                    <button class="new-analysis-btn" onclick="resetToUpload()">
-                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
-                        </svg>
+                    <button class="new-btn" onclick="resetTriage()">
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
                         New Analysis
                     </button>
                 </div>
             </div>
 
-            <!-- ── HISTORY VIEW ───────────────────────────────── -->
-            <div id="historyView" style="display:none;">
-                <div class="page-title">Processing History</div>
-                <div class="page-desc">Documents analysed in this session</div>
-
+            <!-- ═══════════════════════════════════════════════════
+                 PAGE: History
+                 ═══════════════════════════════════════════════════ -->
+            <div id="page-history" style="display:none">
+                <div class="page-hero">
+                    <div class="page-title">Processing History</div>
+                    <div class="page-desc">Documents analysed in this session</div>
+                </div>
                 <div class="history-list" id="historyList">
-                    <div class="history-empty" id="historyEmpty">
-                        No documents processed yet. Start a new triage to see results here.
+                    <div class="empty-state" id="historyEmpty">
+                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <div>No documents processed yet.<br>Start a new triage to see results here.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══════════════════════════════════════════════════
+                 PAGE: Settings
+                 ═══════════════════════════════════════════════════ -->
+            <div id="page-settings" style="display:none">
+                <div class="page-hero">
+                    <div class="page-title">Settings</div>
+                    <div class="page-desc">System configuration and status</div>
+                </div>
+                <div class="settings-grid" id="settingsGrid">
+                    <div class="setting-item">
+                        <h4>Active Framework</h4>
+                        <p>Clinical guideline framework used for triage recommendations</p>
+                        <div class="setting-value" id="settingFw"><span class="dot dot--blue"></span> NHS UK</div>
+                    </div>
+                    <div class="setting-item">
+                        <h4>AI Models</h4>
+                        <p>All inference runs locally — no data leaves this machine</p>
+                        <div class="setting-value"><span class="dot dot--green"></span> Local Only (DTAC Compliant)</div>
+                    </div>
+                    <div class="setting-item">
+                        <h4>GPU Status</h4>
+                        <p>Hardware acceleration for faster inference</p>
+                        <div class="setting-value" id="settingGpu"><span class="dot dot--green"></span> Checking...</div>
+                    </div>
+                    <div class="setting-item">
+                        <h4>Rate Limits</h4>
+                        <p>Per-IP throttling to protect system resources</p>
+                        <div class="setting-value">10 docs/min &middot; 60 docs/hour</div>
+                    </div>
+                    <div class="setting-item">
+                        <h4>Audit Logging</h4>
+                        <p>Append-only daily logs for compliance</p>
+                        <div class="setting-value"><span class="dot dot--green"></span> Enabled</div>
+                    </div>
+                    <div class="setting-item">
+                        <h4>File Limits</h4>
+                        <p>Maximum upload size and accepted formats</p>
+                        <div class="setting-value">16 MB &middot; PDF, TXT</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
          JavaScript
-         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
     <script>
-        // ── State ──────────────────────────────────────────────
-        let selectedFile = null;
-        let history = [];
-        let sessionStats = { documents: 0, redFlags: 0, confidenceSum: 0 };
-        let currentFrameworkBranding = {};
+        // ── State ─────────────────────────────────────────────
+        var selectedFile = null;
+        var historyItems = [];
+        var stats = { docs: 0, flags: 0, confSum: 0 };
+        var currentBranding = {};
 
-        // ── Helpers ────────────────────────────────────────────
-        function escapeHtml(str) {
-            if (!str) return '';
-            const el = document.createElement('div');
-            el.textContent = str;
+        // ── Utilities ─────────────────────────────────────────
+        function escapeHtml(s) {
+            if (!s) return '';
+            var el = document.createElement('div');
+            el.textContent = s;
             return el.innerHTML;
         }
 
-        function formatFileSize(bytes) {
-            if (bytes < 1024) return bytes + ' B';
-            if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
-            return (bytes / 1048576).toFixed(1) + ' MB';
+        function fmtSize(b) {
+            if (b < 1024) return b + ' B';
+            if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+            return (b / 1048576).toFixed(1) + ' MB';
         }
 
-        // ── Sidebar & Navigation ──────────────────────────────
+        // ── Sidebar ───────────────────────────────────────────
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('open');
             document.getElementById('sidebarOverlay').classList.toggle('visible');
@@ -1703,61 +1467,61 @@
 
         document.getElementById('sidebarOverlay').addEventListener('click', toggleSidebar);
 
-        function switchView(view) {
-            document.querySelectorAll('.nav-item[data-view]').forEach(el => el.classList.remove('active'));
-            document.querySelector(`.nav-item[data-view="${view}"]`).classList.add('active');
+        // ── Pages ─────────────────────────────────────────────
+        var pages = ['dashboard', 'triage', 'history', 'settings'];
+        var pageLabels = { dashboard: 'Dashboard', triage: 'New Triage', history: 'History', settings: 'Settings' };
 
-            document.getElementById('triageView').style.display = view === 'triage' ? 'block' : 'none';
-            document.getElementById('historyView').style.display = view === 'history' ? 'block' : 'none';
-            document.getElementById('headerView').textContent = view === 'triage' ? 'New Triage' : 'History';
-
-            // Close mobile sidebar
+        function goPage(name) {
+            pages.forEach(function(p) {
+                document.getElementById('page-' + p).style.display = p === name ? 'block' : 'none';
+            });
+            document.querySelectorAll('.nav-item[data-page]').forEach(function(el) {
+                el.classList.toggle('active', el.dataset.page === name);
+            });
+            document.getElementById('hdrPage').textContent = pageLabels[name] || name;
+            // close mobile sidebar
             document.getElementById('sidebar').classList.remove('open');
             document.getElementById('sidebarOverlay').classList.remove('visible');
         }
 
         // ── Config Toggle ─────────────────────────────────────
         function toggleConfig() {
-            const body = document.getElementById('configBody');
-            const toggle = document.getElementById('configToggle');
-            body.classList.toggle('hidden');
-            toggle.classList.toggle('collapsed');
+            document.getElementById('cfgBody').classList.toggle('hidden');
+            document.getElementById('cfgToggle').classList.toggle('collapsed');
         }
 
-        // ── Framework & Scopes ────────────────────────────────
-        function loadFrameworks() {
+        // ── Frameworks & Branding ─────────────────────────────
+        function loadFrameworkOptions() {
             fetch('/frameworks', { credentials: 'same-origin' })
-                .then(r => r.json())
-                .then(data => {
-                    const sel = document.getElementById('frameworkSelect');
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    var sel = document.getElementById('framework-select');
                     sel.innerHTML = '';
-                    (data.frameworks || []).forEach(fw => {
-                        const opt = document.createElement('option');
+                    (data.frameworks || []).forEach(function(fw) {
+                        var opt = document.createElement('option');
                         opt.value = fw.id;
                         opt.textContent = fw.name;
                         sel.appendChild(opt);
                     });
 
-                    const scopeBox = document.getElementById('scopeCheckboxes');
-                    scopeBox.innerHTML = '';
-                    (data.scopes || []).forEach(scope => {
-                        const chip = document.createElement('label');
+                    var box = document.getElementById('scopes-container');
+                    box.innerHTML = '';
+                    (data.scopes || []).forEach(function(scope) {
+                        var chip = document.createElement('label');
                         chip.className = 'scope-chip';
-                        chip.innerHTML = `
-                            <input type="checkbox" value="${escapeHtml(scope.id)}" onchange="onScopeToggle(this)">
-                            <span class="check-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg></span>
-                            ${escapeHtml(scope.name)}
-                        `;
-                        scopeBox.appendChild(chip);
+                        chip.innerHTML = '<input type="checkbox" value="' + escapeHtml(scope.id) + '" onchange="onScopeToggle(this)">' +
+                            '<span class="chk"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg></span>' +
+                            escapeHtml(scope.name);
+                        box.appendChild(chip);
                     });
 
-                    if (data.scopes && data.scopes.length === 0) {
-                        scopeBox.innerHTML = '<span style="font-size:12px;color:var(--text-muted)">No additional scopes available</span>';
+                    if (!data.scopes || data.scopes.length === 0) {
+                        box.innerHTML = '<span style="font-size:12px;color:var(--text-muted)">No additional scopes</span>';
                     }
 
                     onFrameworkChange();
                 })
-                .catch(() => {});
+                .catch(function() {});
         }
 
         function onScopeToggle(input) {
@@ -1765,103 +1529,78 @@
         }
 
         function onFrameworkChange() {
-            const fwId = document.getElementById('frameworkSelect').value;
-            fetch(`/framework-config/${fwId}`, { credentials: 'same-origin' })
-                .then(r => r.json())
-                .then(cfg => {
-                    currentFrameworkBranding = cfg.branding || {};
-                    const name = cfg.name || fwId;
-
-                    document.getElementById('sidebarSubtitle').textContent = name + ' Framework';
-                    document.getElementById('headerFramework').textContent = name;
-
-                    // Update accent color if branding provides one
-                    if (currentFrameworkBranding.primary_color) {
-                        const c = currentFrameworkBranding.primary_color;
-                        document.documentElement.style.setProperty('--framework-accent', c);
-                        // Darken for hover
-                        document.documentElement.style.setProperty('--framework-accent-hover', c);
-                        document.documentElement.style.setProperty('--framework-accent-subtle', c + '18');
-                    } else {
-                        document.documentElement.style.removeProperty('--framework-accent');
-                        document.documentElement.style.removeProperty('--framework-accent-hover');
-                        document.documentElement.style.removeProperty('--framework-accent-subtle');
-                    }
+            var fwId = document.getElementById('framework-select').value;
+            fetch('/framework-config/' + fwId, { credentials: 'same-origin' })
+                .then(function(r) { return r.json(); })
+                .then(function(cfg) {
+                    updateBranding(cfg);
                 })
-                .catch(() => {});
+                .catch(function() {});
         }
 
-        // ── GPU Status ────────────────────────────────────────
+        function updateBranding(cfg) {
+            currentBranding = cfg.branding || {};
+            var name = cfg.name || cfg.id || '';
+
+            // Update text
+            document.getElementById('logo-text').textContent = currentBranding.logo_text || 'NHS';
+            document.getElementById('subtitle-text').textContent = currentBranding.subtitle || name;
+            document.getElementById('hdrFramework').textContent = name;
+            document.getElementById('statFw').textContent = name;
+            document.getElementById('settingFw').innerHTML = '<span class="dot dot--blue"></span> ' + escapeHtml(name);
+
+            // Update CSS variables
+            if (currentBranding.primary_color) {
+                document.documentElement.style.setProperty('--primary-color', currentBranding.primary_color);
+            }
+            if (currentBranding.secondary_color) {
+                document.documentElement.style.setProperty('--secondary-color', currentBranding.secondary_color);
+            }
+            if (currentBranding.success_color) {
+                document.documentElement.style.setProperty('--success-color', currentBranding.success_color);
+            }
+        }
+
+        // ── Health ────────────────────────────────────────────
         function checkHealth() {
             fetch('/health')
-                .then(r => r.json())
-                .then(data => {
-                    const el = document.getElementById('gpuStatusText');
-                    const nav = document.getElementById('gpuStatusNav');
-                    if (data.cuda_available && data.gpu_info) {
-                        el.textContent = data.gpu_info.device_name || 'GPU Active';
-                        // Swap dot
-                        const existing = nav.querySelector('.status-dot');
-                        if (existing) existing.remove();
-                        const dot = document.createElement('span');
-                        dot.className = 'status-dot status-dot--green';
-                        nav.prepend(dot);
-                        // Remove svg icon
-                        const svg = nav.querySelector('svg');
-                        if (svg) svg.remove();
-                    } else {
-                        el.textContent = 'CPU Mode';
+                .then(function(r) { return r.json(); })
+                .then(function(d) {
+                    var txt = 'CPU Mode';
+                    if (d.cuda_available && d.gpu_info) {
+                        txt = d.gpu_info.device_name || 'GPU Active';
                     }
+                    document.getElementById('gpuText').textContent = txt;
+                    document.getElementById('settingGpu').innerHTML = '<span class="dot dot--green"></span> ' + escapeHtml(txt);
                 })
-                .catch(() => {
-                    document.getElementById('gpuStatusText').textContent = 'Offline';
+                .catch(function() {
+                    document.getElementById('gpuText').textContent = 'Offline';
                 });
         }
 
-        // ── File Upload ───────────────────────────────────────
-        const uploadZone = document.getElementById('uploadZone');
+        // ── Upload ────────────────────────────────────────────
+        var uz = document.getElementById('uploadZone');
 
-        uploadZone.addEventListener('dragover', e => {
+        uz.addEventListener('dragover', function(e) { e.preventDefault(); uz.classList.add('drag-over'); });
+        uz.addEventListener('dragleave', function(e) { e.preventDefault(); uz.classList.remove('drag-over'); });
+        uz.addEventListener('drop', function(e) {
             e.preventDefault();
-            uploadZone.classList.add('drag-over');
+            uz.classList.remove('drag-over');
+            if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
         });
 
-        uploadZone.addEventListener('dragleave', e => {
-            e.preventDefault();
-            uploadZone.classList.remove('drag-over');
-        });
-
-        uploadZone.addEventListener('drop', e => {
-            e.preventDefault();
-            uploadZone.classList.remove('drag-over');
-            if (e.dataTransfer.files.length > 0) {
-                handleFile(e.dataTransfer.files[0]);
-            }
-        });
-
-        function onFileSelect(e) {
-            if (e.target.files.length > 0) {
-                handleFile(e.target.files[0]);
-            }
-        }
+        function onFileSelect(e) { if (e.target.files.length) handleFile(e.target.files[0]); }
 
         function handleFile(file) {
-            const ext = file.name.split('.').pop().toLowerCase();
-            if (!['pdf', 'txt'].includes(ext)) {
-                showError('Please upload a PDF or TXT file.');
-                return;
-            }
-            if (file.size > 16 * 1024 * 1024) {
-                showError('File exceeds 16 MB limit.');
-                return;
-            }
-
+            var ext = file.name.split('.').pop().toLowerCase();
+            if (['pdf', 'txt'].indexOf(ext) === -1) { showError('Please upload a PDF or TXT file.'); return; }
+            if (file.size > 16 * 1024 * 1024) { showError('File exceeds 16 MB limit.'); return; }
             selectedFile = file;
             document.getElementById('fileName').textContent = file.name;
-            document.getElementById('fileSize').textContent = formatFileSize(file.size);
+            document.getElementById('fileSize').textContent = fmtSize(file.size);
             document.getElementById('uploadPrompt').style.display = 'none';
             document.getElementById('filePreview').style.display = 'flex';
-            uploadZone.classList.add('has-file');
+            uz.classList.add('has-file');
             document.getElementById('processBtn').disabled = false;
         }
 
@@ -1871,160 +1610,150 @@
             document.getElementById('fileInput').value = '';
             document.getElementById('uploadPrompt').style.display = '';
             document.getElementById('filePreview').style.display = 'none';
-            uploadZone.classList.remove('has-file');
+            uz.classList.remove('has-file');
             document.getElementById('processBtn').disabled = true;
         }
 
         // ── Processing ────────────────────────────────────────
-        const stepIds = ['step-extract', 'step-anonymise', 'step-kb', 'step-reason'];
-        let stepTimer = null;
+        var stepIds = ['step-extract', 'step-anonymise', 'step-kb', 'step-reason'];
+        var stepTimer = null;
 
-        function advanceStep(index) {
-            stepIds.forEach((id, i) => {
-                const el = document.getElementById(id);
+        function advanceStep(idx) {
+            stepIds.forEach(function(id, i) {
+                var el = document.getElementById(id);
                 el.classList.remove('active', 'done');
-                if (i < index) el.classList.add('done');
-                if (i === index) el.classList.add('active');
+                if (i < idx) el.classList.add('done');
+                if (i === idx) el.classList.add('active');
             });
         }
 
         function processDocument() {
             if (!selectedFile) return;
 
-            // Hide results/error, show processing
             document.getElementById('resultsSection').classList.remove('visible');
             document.getElementById('errorBanner').classList.remove('visible');
             document.getElementById('uploadCard').style.display = 'none';
             document.getElementById('processingCard').classList.add('visible');
 
-            // Animate steps
-            let currentStep = 0;
+            var cur = 0;
             advanceStep(0);
-            stepTimer = setInterval(() => {
-                currentStep++;
-                if (currentStep < stepIds.length) {
-                    advanceStep(currentStep);
-                }
+            stepTimer = setInterval(function() {
+                cur++;
+                if (cur < stepIds.length) advanceStep(cur);
             }, 2500);
 
-            // Build form data
-            const formData = new FormData();
+            var formData = new FormData();
             formData.append('file', selectedFile);
-            formData.append('framework', document.getElementById('frameworkSelect').value);
+            formData.append('framework', document.getElementById('framework-select').value);
 
-            const scopes = [];
-            document.querySelectorAll('#scopeCheckboxes input:checked').forEach(cb => scopes.push(cb.value));
-            if (scopes.length > 0) formData.append('scopes', scopes.join(','));
+            var scopes = [];
+            document.querySelectorAll('#scopes-container input:checked').forEach(function(cb) { scopes.push(cb.value); });
+            if (scopes.length) formData.append('scopes', scopes.join(','));
 
-            fetch('/process', {
-                method: 'POST',
-                body: formData,
-                credentials: 'same-origin'
-            })
-            .then(r => r.json())
-            .then(data => {
-                clearInterval(stepTimer);
-                // Complete all steps
-                stepIds.forEach(id => {
-                    const el = document.getElementById(id);
-                    el.classList.remove('active');
-                    el.classList.add('done');
-                });
-
-                setTimeout(() => {
+            fetch('/process', { method: 'POST', body: formData, credentials: 'same-origin' })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    clearInterval(stepTimer);
+                    stepIds.forEach(function(id) {
+                        var el = document.getElementById(id);
+                        el.classList.remove('active');
+                        el.classList.add('done');
+                    });
+                    setTimeout(function() {
+                        document.getElementById('processingCard').classList.remove('visible');
+                        if (data.status === 'success') {
+                            displayResults(data);
+                        } else {
+                            showError(data.error || 'An unexpected error occurred.');
+                            document.getElementById('uploadCard').style.display = '';
+                        }
+                    }, 600);
+                })
+                .catch(function() {
+                    clearInterval(stepTimer);
                     document.getElementById('processingCard').classList.remove('visible');
-
-                    if (data.status === 'success') {
-                        displayResults(data);
-                    } else {
-                        showError(data.error || 'An unexpected error occurred.');
-                        document.getElementById('uploadCard').style.display = '';
-                    }
-                }, 600);
-            })
-            .catch(err => {
-                clearInterval(stepTimer);
-                document.getElementById('processingCard').classList.remove('visible');
-                showError('Network error. Please check your connection.');
-                document.getElementById('uploadCard').style.display = '';
-            });
+                    showError('Network error. Please check your connection.');
+                    document.getElementById('uploadCard').style.display = '';
+                });
         }
 
-        // ── Display Results ───────────────────────────────────
+        // ── Results ───────────────────────────────────────────
         function displayResults(data) {
-            const rec = data.recommendation || {};
-            const risk = data.risk_assessment || {};
+            var rec = data.recommendation || {};
+            var risk = data.risk_assessment || {};
+            var urgency = (rec.urgency || risk.urgency || 'ROUTINE').toUpperCase();
 
-            // Determine urgency class
-            const urgency = (rec.urgency || risk.urgency || 'ROUTINE').toUpperCase();
-            let urgencyClass = 'routine';
-            if (urgency.includes('EMERGENCY') || urgency.includes('EMERGENT')) urgencyClass = 'emergency';
-            else if (urgency.includes('URGENT')) urgencyClass = 'urgent';
+            // Determine CSS class
+            var uClass = 'routine';
+            if (urgency.indexOf('EMERGENCY') !== -1) uClass = 'emergency';
+            else if (urgency.indexOf('EMERGENT') !== -1) uClass = 'emergent';
+            else if (urgency.indexOf('URGENT') !== -1) uClass = 'urgent';
+            else if (urgency.indexOf('ELECTIVE') !== -1) uClass = 'elective';
 
-            // Urgency banner
-            const banner = document.getElementById('urgencyBanner');
-            banner.className = `urgency-banner urgency-banner--${urgencyClass} animate-in`;
+            var banner = document.getElementById('urgencyBanner');
+            banner.className = 'urgency-banner urgency-' + uClass + ' anim';
 
-            const icons = {
+            var icons = {
                 emergency: '<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z"/></svg>',
+                emergent: '<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z"/></svg>',
                 urgent: '<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
-                routine: '<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+                routine: '<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
+                elective: '<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
             };
-            document.getElementById('urgencyIcon').innerHTML = icons[urgencyClass];
+
+            document.getElementById('urgencyIconBox').innerHTML = icons[uClass] || icons.routine;
             document.getElementById('urgencyLevel').textContent = urgency;
-            document.getElementById('urgencyTimeframe').textContent = rec.suggested_timeframe || '';
+            document.getElementById('urgencyTime').textContent = rec.suggested_timeframe || '';
+
+            // Framework badge
+            var fwName = data.framework || document.getElementById('hdrFramework').textContent;
+            document.getElementById('resultFrameworkBadge').textContent = fwName;
 
             // Confidence
-            const conf = (rec.confidence_level || 'moderate').toLowerCase();
-            const confidenceDot = document.getElementById('confidenceDot');
-            confidenceDot.className = `confidence-dot confidence-dot--${conf}`;
-            document.getElementById('confidenceText').textContent = conf.charAt(0).toUpperCase() + conf.slice(1) + ' confidence';
-
-            // Model source
-            document.getElementById('modelSource').textContent = rec.model_source || '';
+            var conf = (rec.confidence_level || 'moderate').toLowerCase();
+            document.getElementById('confDot').className = 'conf-dot conf-dot--' + conf;
+            document.getElementById('confText').textContent = conf.charAt(0).toUpperCase() + conf.slice(1) + ' confidence';
+            document.getElementById('modelSrc').textContent = rec.model_source || '';
 
             // Summary
-            document.getElementById('clinicalSummary').innerHTML = '<p>' + escapeHtml(data.summary || 'No summary available.') + '</p>';
+            document.getElementById('resSummary').innerHTML = '<p>' + escapeHtml(data.summary || 'No summary available.') + '</p>';
 
             // Red flags
-            const flagContainer = document.getElementById('redFlagChips');
-            flagContainer.innerHTML = '';
-            const allFlags = [...(risk.red_flags || []), ...(rec.red_flags || [])];
-            const uniqueFlags = [...new Set(allFlags)];
-            if (uniqueFlags.length > 0) {
-                uniqueFlags.forEach(flag => {
-                    const chip = document.createElement('span');
-                    chip.className = urgencyClass === 'routine' ? 'flag-chip flag-chip--orange' : 'flag-chip flag-chip--red';
-                    chip.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z"/></svg> ${escapeHtml(flag)}`;
-                    flagContainer.appendChild(chip);
+            var fc = document.getElementById('resFlags');
+            fc.innerHTML = '';
+            var allFlags = [].concat(risk.red_flags || [], rec.red_flags || []);
+            var unique = allFlags.filter(function(v, i, a) { return a.indexOf(v) === i; });
+            if (unique.length) {
+                unique.forEach(function(flag) {
+                    var chip = document.createElement('span');
+                    chip.className = (uClass === 'routine' || uClass === 'elective') ? 'flag-chip flag-chip--orange' : 'flag-chip flag-chip--red';
+                    chip.innerHTML = '<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z"/></svg> ' + escapeHtml(flag);
+                    fc.appendChild(chip);
                 });
             } else {
-                flagContainer.innerHTML = '<span style="font-size:13px;color:var(--text-muted)">No red flags detected</span>';
+                fc.innerHTML = '<span style="font-size:13px;color:var(--text-muted)">No red flags detected</span>';
             }
 
-            // Evidence
-            document.getElementById('evidenceBasis').textContent = rec.evidence_basis || 'No evidence references available.';
+            // Evidence & reasoning
+            document.getElementById('resEvidence').textContent = rec.evidence_basis || 'No evidence references available.';
+            document.getElementById('resReasoning').textContent = rec.reasoning || 'No clinical reasoning available.';
 
-            // Reasoning
-            document.getElementById('clinicalReasoning').textContent = rec.reasoning || 'No clinical reasoning available.';
-
-            // Show results
             document.getElementById('resultsSection').classList.add('visible');
 
-            // Update stats
-            sessionStats.documents++;
-            sessionStats.redFlags += uniqueFlags.length;
-            const confVal = conf === 'high' ? 90 : conf === 'moderate' ? 70 : 50;
-            sessionStats.confidenceSum += confVal;
-            updateStats();
+            // Stats
+            stats.docs++;
+            stats.flags += unique.length;
+            var cv = conf === 'high' ? 90 : conf === 'moderate' ? 70 : 50;
+            stats.confSum += cv;
+            refreshStats();
 
-            // Add to history
-            addToHistory({
+            // History
+            addHistory({
                 filename: selectedFile ? selectedFile.name : 'Unknown',
-                urgency: urgencyClass,
+                uClass: uClass,
                 urgencyLabel: urgency,
                 confidence: conf,
-                timestamp: new Date(),
+                time: new Date(),
                 result: data
             });
 
@@ -2032,72 +1761,57 @@
         }
 
         // ── Stats ─────────────────────────────────────────────
-        function updateStats() {
-            document.getElementById('statDocuments').textContent = sessionStats.documents;
-            document.getElementById('statRedFlags').textContent = sessionStats.redFlags;
-            if (sessionStats.documents > 0) {
-                const avg = Math.round(sessionStats.confidenceSum / sessionStats.documents);
-                document.getElementById('statConfidence').innerHTML = avg + '<span>%</span>';
+        function refreshStats() {
+            document.getElementById('statDocs').textContent = stats.docs;
+            document.getElementById('statFlags').textContent = stats.flags;
+            if (stats.docs > 0) {
+                document.getElementById('statConf').innerHTML = Math.round(stats.confSum / stats.docs) + '<small>%</small>';
             }
         }
 
         // ── History ───────────────────────────────────────────
-        function addToHistory(item) {
-            history.unshift(item);
-            document.getElementById('historyCount').textContent = history.length;
+        function addHistory(item) {
+            historyItems.unshift(item);
+            document.getElementById('historyCount').textContent = historyItems.length;
             renderHistory();
         }
 
         function renderHistory() {
-            const list = document.getElementById('historyList');
-            const empty = document.getElementById('historyEmpty');
-
-            if (history.length === 0) {
-                empty.style.display = '';
-                return;
-            }
-
+            var list = document.getElementById('historyList');
+            var empty = document.getElementById('historyEmpty');
+            if (!historyItems.length) { empty.style.display = ''; return; }
             empty.style.display = 'none';
-            // Clear old items (keep empty div)
-            list.querySelectorAll('.history-item').forEach(el => el.remove());
-
-            history.forEach((item, idx) => {
-                const el = document.createElement('div');
+            list.querySelectorAll('.history-item').forEach(function(el) { el.remove(); });
+            historyItems.forEach(function(item, idx) {
+                var el = document.createElement('div');
                 el.className = 'history-item';
-                el.onclick = () => viewHistoryItem(idx);
-
-                const time = item.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-                el.innerHTML = `
-                    <span class="history-urgency-dot history-urgency-dot--${item.urgency}"></span>
-                    <div class="history-info">
-                        <div class="history-filename">${escapeHtml(item.filename)}</div>
-                        <div class="history-meta">${time} &middot; ${escapeHtml(item.confidence)} confidence</div>
-                    </div>
-                    <span class="history-urgency-label history-urgency-label--${item.urgency}">${escapeHtml(item.urgencyLabel)}</span>
-                `;
-
+                el.onclick = function() { viewHistory(idx); };
+                var t = item.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                el.innerHTML =
+                    '<span class="history-dot history-dot--' + item.uClass + '"></span>' +
+                    '<div class="history-info"><div class="history-name">' + escapeHtml(item.filename) + '</div>' +
+                    '<div class="history-meta">' + t + ' &middot; ' + escapeHtml(item.confidence) + ' confidence</div></div>' +
+                    '<span class="history-tag history-tag--' + item.uClass + '">' + escapeHtml(item.urgencyLabel) + '</span>';
                 list.appendChild(el);
             });
         }
 
-        function viewHistoryItem(idx) {
-            const item = history[idx];
+        function viewHistory(idx) {
+            var item = historyItems[idx];
             if (!item || !item.result) return;
-
-            switchView('triage');
+            goPage('triage');
             document.getElementById('uploadCard').style.display = 'none';
             displayResults(item.result);
         }
 
         // ── Error ─────────────────────────────────────────────
         function showError(msg) {
-            document.getElementById('errorMessage').textContent = msg;
+            document.getElementById('errorMsg').textContent = msg;
             document.getElementById('errorBanner').classList.add('visible');
         }
 
         // ── Reset ─────────────────────────────────────────────
-        function resetToUpload() {
+        function resetTriage() {
             document.getElementById('resultsSection').classList.remove('visible');
             document.getElementById('errorBanner').classList.remove('visible');
             document.getElementById('uploadCard').style.display = '';
@@ -2105,7 +1819,12 @@
         }
 
         // ── Init ──────────────────────────────────────────────
-        loadFrameworks();
+        (function() {
+            var sel = document.getElementById('framework-select');
+            sel.className = 'field-select';
+            sel.onchange = onFrameworkChange;
+        })();
+        loadFrameworkOptions();
         checkHealth();
     </script>
 </body>
