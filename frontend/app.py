@@ -23,7 +23,7 @@ from backend.logger import NHSComplianceLogger  # noqa: E402
 def create_app():
     """Application factory for WSGI servers (gunicorn, waitress)."""
     app = Flask(__name__)
-    
+
     # Enable CORS for all domains (safe for local desktop app, lock down in production if needed)
     CORS(app, supports_credentials=True)
 
