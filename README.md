@@ -7,7 +7,7 @@ This workspace contains an MVP version of the NHS medical document processor dem
 
 This AI tool is designed to assist cardiovascular surgeons within the NHS in the triage of referral letters received from GPs. These letters contain detailed patient histories and descriptions of current medical concerns. Traditionally, reviewing and prioritizing these referrals is a time-consuming task, often rotated among surgical teams. The NHS has to maintain a strict code of record management and practices when it comes to patients' data (records management guidelines found here: https://transform.england.nhs.uk/information-governance/guidance/records-management-code/records-management-code-of-practice/).
 
-The AI model streamlines this process by summarizing key patient information and highlighting critical issues and a suggested plan of action (with three levels currently: Routine, Urgent, Emergency), enabling surgeons to quickly identify cases that require urgent attention or further investigation, including potential surgery. While a surgeon reviewing the information remains essential and is required for final decision-making, this tool shoudl hopefully reduce the time spent reviewing referrals and enhances clinical efficiency by focusing attention on the most relevant data.
+The AI model streamlines this process by summarizing key patient information and highlighting critical issues and a suggested plan of action (with three levels currently: Routine, Urgent, Emergency), enabling surgeons to quickly identify cases that require urgent attention or further investigation, including potential surgery. It also extracts structured clinical data — patient demographics, vital signs, 36 blood test panels with NHS/NICE reference ranges, 250+ cardiovascular medications across 17 BNF drug classes, and 15 validated clinical equations (eGFR CKD-EPI 2021, CHA₂DS₂-VASc, HAS-BLED, QTc Bazett, BMI, BSA, MAP, AHI, NYHA, LVEF, and more). While a surgeon reviewing the information remains essential and is required for final decision-making, this tool should hopefully reduce the time spent reviewing referrals and enhance clinical efficiency by focusing attention on the most relevant data.
 
 ## Updated app structure
  Directory Structure (full tree)
@@ -62,7 +62,7 @@ Setup & Running
  # Run only no-ML-required tests
  pytest tests/test_config_loader.py tests/test_anonymizer.py tests/test_guideline_accuracy.py tests/test_kb_chroma.py -v
 
- 248 total tests; 164 pass without ML deps, 84 skip gracefully.
+ 382 total tests; 298 pass without ML deps, 84 skip gracefully.
 
  8. Adding a New Framework
 
@@ -82,13 +82,29 @@ Setup & Running
 
  10. Tech Stack
 
- - BioGPT-Large (Microsoft) — medical reasoning
+ - Ollama / Phi-3 mini — primary clinical reasoning model (instruction-following)
+ - BioGPT-Large (Microsoft) — fallback medical reasoning
  - BART-large-cnn (Facebook) — summarization
  - all-MiniLM-L6-v2 — sentence embeddings
  - ChromaDB — multi-collection vector database
  - spaCy (en_core_web_sm) — NLP/NER
- - Flask — REST API
+ - Flask — REST API + Jinja2 template UI
+ - Next.js 16 — alternative React frontend (in /ui)
  - Tesseract/pytesseract — OCR PDF parsing
+
+ 11. Clinical Data Extraction (backend/clinical_extractor.py)
+
+ - Patient demographics: age, sex, height, weight, BMI
+ - Vital signs: BP, HR, SpO2, temperature, respiratory rate
+ - 36 blood test panels with NHS/NICE reference ranges and flagging (normal/low/high/critical)
+ - 250+ cardiovascular medications across 17 BNF drug classes (with dose/frequency extraction)
+ - 15 validated clinical equations with peer-reviewed references:
+   - BMI, BSA (Du Bois), MAP, Pulse Pressure
+   - eGFR CKD-EPI 2021 (Inker et al., NEJM 2021)
+   - QTc Bazett, AHI, NYHA class, LVEF
+   - CHA₂DS₂-VASc (Lip et al., Chest 2010)
+   - HAS-BLED (Pisters et al., Chest 2010)
+   - EuroSCORE II, GRACE, Framingham, TIMI
 
 # Future Improvements
 
@@ -130,7 +146,7 @@ More info about NHS technology guidelines can be found online. This project adhe
 
 **If you use this project, please build upon it for the greater good of its original intent (used as a tool, cardiovascular surgeons are required to review the information. It is a tool and should be used as such). Feel free to work on this project, clone it, understand it, improve it, etc. Please cite the author of this Repo when doing so (Bhargav Ashok)**
 
-Last edit: 3/17/2026
+Last edit: 3/18/2026
 
 
 

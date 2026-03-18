@@ -13,6 +13,7 @@ This is a **research-grade, locally-deployed AI triage assistant** for cardiovas
 ```
 backend/
   anonymizer.py          # PII redaction (NHS number, SSN, MRN, postcodes, etc.)
+  clinical_extractor.py  # Structured clinical data extraction (demographics, vitals, bloods, meds, scores)
   config_loader.py       # Multi-framework JSON config loading + scope merging
   ingest_kb.py           # ChromaDB ingestion CLI for PDF/TXT guidelines
   kb_chroma.py           # Vector similarity search over ingested guidelines
@@ -88,7 +89,7 @@ pytest tests/test_config_loader.py tests/test_anonymizer.py \
        tests/test_guideline_accuracy.py tests/test_kb_chroma.py -v
 ```
 
-248 total tests; 164 pass without ML dependencies installed. Tests cover:
+382 total tests; 298 pass without ML dependencies installed. Tests cover:
 - Framework config structure validation
 - Regex pattern compilation
 - PII anonymisation (NHS, US patterns)
@@ -96,6 +97,9 @@ pytest tests/test_config_loader.py tests/test_anonymizer.py \
 - ACHD scope merging
 - Flask endpoint responses
 - Guideline reference accuracy (dates, guideline IDs)
+- Clinical data extraction (demographics, vitals, 36 blood tests, 250+ medications)
+- Validated clinical equations (eGFR CKD-EPI 2021, CHA₂DS₂-VASc, HAS-BLED, QTc, BMI, BSA, MAP, etc.)
+- Interpretation function thresholds
 
 ---
 
