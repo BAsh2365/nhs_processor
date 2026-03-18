@@ -36,7 +36,8 @@ RUN pip install --no-cache-dir -r requirements.txt \
 COPY . .
 
 # Pre-download ML models at build time for zero cold-start
-# This adds ~3GB to the image but means the first request is instant.
+# Clinical reasoning now handled by Ollama (Phi-3) in a separate container.
+# BioGPT is kept as a fallback but not prewarmed to save image size.
 RUN if [ "$PREWARM_MODELS" = "1" ]; then \
     echo "[Prewarm] Downloading ML models..." && \
     python -c "\
@@ -44,12 +45,10 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline; \
 from sentence_transformers import SentenceTransformer; \
 print('Downloading BART-large-cnn...'); \
 pipeline('summarization', model='facebook/bart-large-cnn'); \
-print('Downloading BioGPT...'); \
-AutoTokenizer.from_pretrained('microsoft/BioGPT'); \
-AutoModelForCausalLM.from_pretrained('microsoft/BioGPT'); \
 print('Downloading sentence-transformers...'); \
 SentenceTransformer('all-MiniLM-L6-v2'); \
 print('[Prewarm] All models downloaded.'); \
+print('[Note] Clinical reasoning uses Ollama (Phi-3) — pull model with: docker exec nhs-processor-ollama ollama pull phi3:mini'); \
 " ; \
     else echo "[Prewarm] Skipping model download (PREWARM_MODELS=0)"; fi
 

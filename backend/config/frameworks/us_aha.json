@@ -89,9 +89,16 @@
   "kb_collections": ["us_aha_kb"],
 
   "models": {
+    "ollama_reasoning": {
+      "model": "phi3:mini",
+      "base_url": "http://ollama:11434",
+      "timeout": 120,
+      "type": "ollama"
+    },
     "medical_reasoning": {
       "model_id": "microsoft/BioGPT",
-      "type": "causal_lm"
+      "type": "causal_lm",
+      "note": "Fallback if Ollama is unavailable"
     },
     "summarization": {
       "model_id": "facebook/bart-large-cnn",

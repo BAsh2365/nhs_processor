@@ -12,6 +12,25 @@
 #   docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d
 
 services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: nhs-processor-ollama
+    restart: unless-stopped
+    entrypoint: ["/bin/bash", "/entrypoint.sh"]
+    environment:
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-phi3:mini}
+    expose:
+      - "11434"
+    volumes:
+      - ollama-models:/root/.ollama
+      - ./ollama-entrypoint.sh:/entrypoint.sh:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
   app:
     build:
       context: ..
@@ -21,11 +40,16 @@ services:
     env_file: ../.env
     environment:
       - PYTHONUNBUFFERED=1
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-phi3:mini}
     expose:
       - "5000"
     volumes:
       - audit-logs:/app/backend/audit_logs
       - kb-store:/app/backend/kb_chroma_store
+    depends_on:
+      ollama:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"]
       interval: 30s
@@ -50,3 +74,4 @@ services:
 volumes:
   audit-logs:
   kb-store:
+  ollama-models:

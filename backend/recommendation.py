@@ -1,5 +1,6 @@
 from __future__ import annotations
 import json
+import os
 import warnings
 import re
 import threading
@@ -10,6 +11,11 @@ from transformers import (
     AutoModelForCausalLM,
     pipeline,
 )
+
+try:
+    import requests as _requests
+except ImportError:
+    _requests = None
 
 # Global model cache keyed by model_id — prevents redundant loading across frameworks
 _model_cache: Dict[str, object] = {}
@@ -105,11 +111,24 @@ class ClinicalRecommendationEngine:
             "NICE CG95 (chest pain); NICE NG185 (ACS); NICE NG208 (valve disease); NICE NG106 (chronic HF, updated Sep 2025); NHS England Adult Cardiac Surgery Service Specification (Jul 2024)."
         )
 
+        # Ollama configuration for Phi-3 clinical reasoning
+        ollama_cfg = models_cfg.get("ollama_reasoning", {})
+        self._ollama_url = ollama_cfg.get(
+            "base_url",
+            os.environ.get("OLLAMA_BASE_URL", "http://ollama:11434")
+        )
+        self._ollama_model = ollama_cfg.get(
+            "model",
+            os.environ.get("OLLAMA_MODEL", "phi3:mini")
+        )
+        self._ollama_timeout = int(ollama_cfg.get("timeout", 120))
+
         # Models will be lazy-loaded on first use
         self._summarizer = None
         self._biogpt_model = None
         self._biogpt_tokenizer = None
         self._init_error = None
+        self._ollama_available = None  # None = not checked yet
 
     def _load_summarizer(self):
         """Load summarization model with fp16 on CUDA, cache-eviction, and OOM fallback."""
@@ -275,15 +294,24 @@ class ClinicalRecommendationEngine:
     def generate_recommendation(self, text: str, context_snippets: Optional[List[Dict]] = None) -> Dict:
         """
         Generate a structured clinical recommendation with urgency triage.
+
+        Tries models in order: Ollama (Phi-3) → BioGPT → rule-based fallback.
         """
         t = (text or "").strip()
         if not t:
             return self._fallback_recommendation("")
 
+        # 1. Try Ollama (Phi-3) — best reasoning quality
+        ollama_rec = self._try_ollama_recommendation(t, context_snippets)
+        if ollama_rec:
+            return ollama_rec
+
+        # 2. Try local BioGPT — limited but runs in-process
         biogpt_rec = self._try_biogpt_recommendation(t, context_snippets)
         if biogpt_rec:
             return biogpt_rec
 
+        # 3. Rule-based fallback — always available
         return self._fallback_recommendation(t)
 
     # ---------- SIGNAL EXTRACTION FROM MODEL OUTPUT ----------
@@ -331,6 +359,161 @@ class ClinicalRecommendationEngine:
             "routine_hits": routine_hits,
             "raw_reasoning": model_text,
         }
+
+    def _check_ollama_health(self) -> bool:
+        """Check if the Ollama service is reachable."""
+        if _requests is None:
+            return False
+        try:
+            resp = _requests.get(f"{self._ollama_url}/api/tags", timeout=5)
+            return resp.status_code == 200
+        except Exception:
+            return False
+
+    def _try_ollama_recommendation(self, text: str, context_snippets: Optional[List[Dict]] = None) -> Optional[Dict]:
+        """Generate clinical reasoning via Ollama (Phi-3) HTTP API.
+
+        Phi-3 is an instruction-following model that produces structured clinical
+        reasoning, unlike BioGPT which only does text completion. This method:
+        1. Sends a clinical reasoning prompt to Ollama.
+        2. Parses the response for urgency signals.
+        3. Returns a structured recommendation dict.
+
+        Falls back to None if Ollama is unavailable, letting the caller
+        try BioGPT or rule-based fallback.
+        """
+        if _requests is None:
+            print("[AI] 'requests' package not installed, skipping Ollama")
+            return None
+
+        # Check availability (cache result for session)
+        if self._ollama_available is None:
+            self._ollama_available = self._check_ollama_health()
+            if self._ollama_available:
+                print(f"[AI] Ollama available at {self._ollama_url}, model: {self._ollama_model}")
+            else:
+                print(f"[AI] Ollama not available at {self._ollama_url}, will try local models")
+        if not self._ollama_available:
+            return None
+
+        try:
+            # Build context from knowledge base snippets
+            ctx = ""
+            if context_snippets:
+                tops = []
+                for item in context_snippets[:3]:
+                    meta = item.get("meta") or {}
+                    src = meta.get("title") or meta.get("source") or "kb"
+                    tops.append(f"[{src}] {item.get('text', '')[:400]}")
+                ctx = "\n\nRelevant clinical guidelines:\n" + "\n---\n".join(tops)
+
+            prompt = (
+                f"{self._system_context}\n\n"
+                f"Referral letter:\n{text[:1500]}\n"
+                f"{ctx}\n\n"
+                f"Based on the above referral letter, provide:\n"
+                f"1. A brief clinical assessment of the patient's presentation\n"
+                f"2. The recommended urgency level: {self._level_emergency}, {self._level_urgent}, or {self._level_routine}\n"
+                f"3. Key red flags identified\n"
+                f"4. Recommended next steps and timeframe\n\n"
+                f"Be concise and evidence-based. {self._schema_hint_suffix}"
+            )
+
+            payload = {
+                "model": self._ollama_model,
+                "prompt": prompt,
+                "stream": False,
+                "options": {
+                    "temperature": 0.1,
+                    "num_predict": 512,
+                    "repeat_penalty": 1.2,
+                }
+            }
+
+            resp = _requests.post(
+                f"{self._ollama_url}/api/generate",
+                json=payload,
+                timeout=self._ollama_timeout,
+            )
+
+            if resp.status_code != 200:
+                print(f"[AI] Ollama returned status {resp.status_code}")
+                return None
+
+            result = resp.json()
+            reasoning_text = result.get("response", "").strip()
+            reasoning_text = self._sanitize_output(reasoning_text)
+
+            if not reasoning_text or len(reasoning_text) < 20:
+                print("[AI] Ollama produced insufficient output, will try fallback")
+                return None
+
+            print(f"[AI] Ollama reasoning ({len(reasoning_text)} chars): {reasoning_text[:120]}...")
+
+            # Extract clinical signals from the model's reasoning
+            model_signals = self._extract_model_signals(reasoning_text)
+
+            # Also run rule-based signal detection on the original text
+            rule_signals = self._rule_based_signals(text)
+
+            # Merge signals
+            all_red_flags = sorted(set(
+                rule_signals["red_flags"]
+                + model_signals["emergency_hits"]
+                + model_signals["urgent_hits"]
+            ))
+
+            # Score: combine rule-based and model-derived signals
+            score = 0.0
+            score += 5.0 * len(model_signals["emergency_hits"])
+            score += 2.0 * len(model_signals["urgent_hits"])
+            score -= 0.5 * len(model_signals["routine_hits"])
+            score += 3.0 * len(rule_signals["emergency_flags"])
+            score += 1.5 * len(rule_signals["urgent_flags"])
+
+            # Determine urgency from combined score
+            if score >= 5.0 or model_signals["emergency_hits"]:
+                urgency = self._level_emergency
+                timeframe = self._timeframes.get("emergency",
+                    "Immediate escalation via local emergency protocol (ED/cardiology).")
+                confidence = "high" if score >= 8.0 else "moderate"
+            elif score >= 2.0 or model_signals["urgent_hits"]:
+                urgency = self._level_urgent
+                timeframe = self._timeframes.get("urgent",
+                    "Urgent assessment within 2 weeks, aligned to NICE ACS/chest-pain pathways.")
+                confidence = "moderate"
+            else:
+                urgency = self._level_routine
+                timeframe = self._timeframes.get("routine",
+                    "Routine outpatient review and non-invasive diagnostics.")
+                confidence = "moderate" if model_signals["routine_hits"] else "cautious"
+
+            # Truncate reasoning if excessively long
+            if len(reasoning_text) > 800:
+                reasoning_text = reasoning_text[:797] + "..."
+
+            return {
+                "recommendation_type": "CARDIOVASCULAR_TRIAGE",
+                "urgency": urgency,
+                "suggested_timeframe": timeframe,
+                "red_flags": all_red_flags,
+                "confidence_level": confidence,
+                "evidence_basis": self._evidence_basis,
+                "reasoning": reasoning_text,
+                "model_contributed": True,
+                "model_source": f"ollama/{self._ollama_model}",
+            }
+
+        except _requests.exceptions.Timeout:
+            print(f"[AI] Ollama request timed out after {self._ollama_timeout}s")
+            return None
+        except _requests.exceptions.ConnectionError:
+            print("[AI] Cannot connect to Ollama service")
+            self._ollama_available = False
+            return None
+        except Exception as e:
+            warnings.warn(f"Ollama recommendation failed: {e}")
+            return None
 
     def _try_biogpt_recommendation(self, text: str, context_snippets: Optional[List[Dict]] = None) -> Optional[Dict]:
         """Generate recommendation using BioGPT for medical reasoning + rule-based structuring.
