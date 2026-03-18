@@ -1,5 +1,8 @@
 from __future__ import annotations
-import os, json, warnings, re, threading
+import json
+import warnings
+import re
+import threading
 from typing import List, Optional, Dict
 import torch
 from transformers import (
@@ -131,7 +134,7 @@ class ClinicalRecommendationEngine:
             )
         except RuntimeError as e:
             if "CUDA" in str(e) or "out of memory" in str(e).lower():
-                print(f"[AI] CUDA OOM loading summarizer, falling back to CPU")
+                print("[AI] CUDA OOM loading summarizer, falling back to CPU")
                 torch.cuda.empty_cache()
                 self.device = "cpu"
                 self._dtype = torch.float32
@@ -174,7 +177,7 @@ class ClinicalRecommendationEngine:
             print(f"[AI] Medical reasoning model loaded on {self.device}")
         except RuntimeError as e:
             if "CUDA" in str(e) or "out of memory" in str(e).lower():
-                print(f"[AI] CUDA OOM loading BioGPT, falling back to CPU")
+                print("[AI] CUDA OOM loading BioGPT, falling back to CPU")
                 torch.cuda.empty_cache()
                 self.device = "cpu"
                 self._dtype = torch.float32
@@ -184,7 +187,7 @@ class ClinicalRecommendationEngine:
                     self._biogpt_model.eval()
                     with _cache_lock:
                         _model_cache[cache_key] = {"tokenizer": self._biogpt_tokenizer, "model": self._biogpt_model}
-                    print(f"[AI] Medical reasoning model loaded on CPU (fallback)")
+                    print("[AI] Medical reasoning model loaded on CPU (fallback)")
                 except Exception as e2:
                     warnings.warn(f"CPU fallback also failed: {e2}. Will use rule-based fallbacks.")
                     self._biogpt_model = None
@@ -220,22 +223,6 @@ class ClinicalRecommendationEngine:
         t = (text or "").strip()
         if not t:
             return ""
-
-        style_instructions = {
-            "exec": (
-                f"3-5 line executive summary for a cardiothoracic surgeon. "
-                f"Include: indication/reason for referral, key symptoms with duration/severity, functional capacity, "
-                f"and the explicit ask. {self._summary_suffix}"
-            ),
-            "bullets": (
-                f"Concise 3-5 bullet summary with bolded labels: Indication, Symptoms, Function, Request. "
-                f"{self._summary_suffix}."
-            ),
-            "concise": (
-                f"Short surgeon-facing paragraph (5-7 lines) highlighting indication, key symptoms, "
-                f"functional capacity and the ask. {self._summary_suffix}"
-            ),
-        }.get(style, f"Concise, surgeon-facing summary. {self._summary_suffix}.")
 
         # Use BART directly for summarization — BioGPT (small) is a text-completion
         # model that doesn't follow summarization instructions reliably.
@@ -277,7 +264,7 @@ class ClinicalRecommendationEngine:
         except RuntimeError as e:
             if "CUDA" in str(e) or "out of memory" in str(e).lower():
                 torch.cuda.empty_cache()
-                warnings.warn(f"CUDA OOM during summarization, using extractive fallback.")
+                warnings.warn("CUDA OOM during summarization, using extractive fallback.")
             else:
                 warnings.warn(f"Summarization failed: {e}. Using extractive fallback.")
             return self._extractive_fallback(t, max_words)
@@ -410,7 +397,8 @@ class ClinicalRecommendationEngine:
             w = len(p.split())
             if count + w > max_words:
                 break
-            out.append(p); count += w
+            out.append(p)
+            count += w
         return " ".join(out) if out else clean[: max_words * 6]
 
     def _fallback_recommendation(self, text: str) -> Dict:

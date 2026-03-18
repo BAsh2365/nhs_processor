@@ -33,7 +33,7 @@ def ingest_folder(pdf_dir: Optional[str] = None, collection_name: str = "nhs_kb"
     pdf_files = [f for f in os.listdir(folder) if f.lower().endswith(('.pdf', '.txt', '.md'))]
     if not pdf_files:
         print(f"WARNING: No PDF/TXT/MD files found in: {folder}")
-        print(f"Please add guideline files to this directory")
+        print("Please add guideline files to this directory")
         return
 
     print(f"Found {len(pdf_files)} files to ingest")

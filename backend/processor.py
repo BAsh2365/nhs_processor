@@ -1,6 +1,5 @@
 # backend/processor.py
 
-import os
 from typing import Optional, Dict, List
 from .anonymizer import Anonymizer, anonymize_text
 from .pdf_processor import PDFProcessor

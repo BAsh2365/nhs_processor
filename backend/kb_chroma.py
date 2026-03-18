@@ -1,5 +1,6 @@
 # kb_chroma.py
-import os, warnings
+import os
+import warnings
 from typing import List, Dict, Optional
 
 # Ensure transformers never tries TensorFlow on your box
