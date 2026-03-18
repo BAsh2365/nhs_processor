@@ -50,14 +50,12 @@ class TestBasicEndpoints:
         resp = client.get('/')
         assert resp.status_code == 200
 
-    def test_index_contains_framework_selector(self, client):
-        html = resp = client.get('/').data.decode()
-        assert 'framework-select' in html
-        assert 'scopes-container' in html
-
-    def test_index_contains_css_variables(self, client):
-        html = client.get('/').data.decode()
-        assert '--primary-color' in html
+    def test_index_returns_json_api_info(self, client):
+        data = json.loads(client.get('/').data)
+        assert data['name'] == 'NHS Medical Document Processor API'
+        assert 'endpoints' in data
+        assert '/health' in data['endpoints']
+        assert '/process' in data['endpoints']
 
     def test_health_endpoint(self, client):
         resp = client.get('/health')

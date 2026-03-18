@@ -31,49 +31,49 @@ backend/
       congenital_achd.json  # ACHD scope overlay (Fontan, Eisenmenger, etc.)
 
 frontend/
-  app.py                 # Flask REST API + UI
-  templates/index.html   # Single-page UI with dynamic framework branding
+  app.py                 # Flask REST API (JSON-only, serves no HTML)
+  templates/             # Legacy HTML templates (kept for test coverage)
   knowledge_pdfs/        # Source guideline PDFs for KB ingestion
     nhs/                 # NICE CG95, NG185, NG208, NG106, NG238 + NHS cardiac spec
     us_aha/              # AHA/ACC 2025 ACS, 2020 VHD, 2022 HF, 2021 Chest Pain
     congenital_achd/     # ESC 2020 ACHD, ACC/AHA 2025 ACHD
   test_pdfs/             # Dummy referral letters for testing (no real patient data)
 
-ui/                      # Next.js 16 frontend (alternative to Flask template)
-tests/                   # pytest suite (164 tests pass without ML deps)
-deploy/                  # Docker Compose, nginx, Ollama entrypoint
+ui/                      # Next.js 16 frontend (static export for Electron)
+electron/                # Electron desktop wrapper (main.js, package.json)
+tests/                   # pytest suite
+deploy/                  # Docker Compose, nginx, Ollama (server deployment only)
 ```
 
 ---
 
-## Running Locally
+## Running Locally (Desktop App — Primary)
+
+See `INSTRUCTIONS_DESKTOP.md` for full setup. Quick start:
 
 ```bash
-# 1. Create and activate venv (Python 3.11 recommended)
-python -m venv .venv
-.venv/Scripts/activate      # Windows
-source .venv/bin/activate   # macOS/Linux
-
-# 2. Install dependencies
+# 1. Python environment
+python -m venv .venv && .venv\Scripts\activate
 pip install -r requirements.txt
 python -m spacy download en_core_web_sm
 
-# 3. Ingest knowledge base (run once, or when guidelines change)
+# 2. Build UI + install Electron
+cd ui && npm install && npm run build && cd ..
+cd electron && npm install && cd ..
+
+# 3. Ingest knowledge base (run once)
 python -m backend.ingest_kb --collection nhs_kb       --folder frontend/knowledge_pdfs/nhs
 python -m backend.ingest_kb --collection us_aha_kb    --folder frontend/knowledge_pdfs/us_aha
 python -m backend.ingest_kb --collection congenital_achd_kb --folder frontend/knowledge_pdfs/congenital_achd
 
-# 4. Run Flask app (dev)
-python frontend/app.py
-
-# 5. Run Next.js UI (optional, in /ui)
-cd ui && npm install && npm run dev
+# 4. Launch desktop app
+cd electron && npm start
 ```
 
-**Docker (recommended for production-like testing):**
+**Server deployment (Docker):**
 ```bash
+pip install -r requirements-server.txt  # adds gunicorn/waitress
 cd deploy && docker compose up -d
-# Ollama pulls phi3:mini on first start (~2 GB). Wait ~2 min before first request.
 ```
 
 ---

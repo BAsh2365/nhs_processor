@@ -114,7 +114,7 @@ class ClinicalRecommendationEngine:
         ollama_cfg = models_cfg.get("ollama_reasoning", {})
         self._ollama_url = ollama_cfg.get(
             "base_url",
-            os.environ.get("OLLAMA_BASE_URL", "http://ollama:11434")
+            os.environ.get("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
         )
         self._ollama_model = ollama_cfg.get(
             "model",

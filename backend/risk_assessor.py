@@ -118,5 +118,5 @@ class CardiovascularRiskAssessor:
 
             return urgency, sorted(set(rf_hits + surg_hits))
         except Exception as e:
-            print("DEBUG_URGENCY: scoring error:", e)
+            # Scoring failed — default to safe ROUTINE classification
             return self.level_routine, []

@@ -12,6 +12,15 @@ backend/audit_logs/
 backend/kb_chroma_store/
 frontend/uploads/
 
+# Node
+node_modules/
+ui/out/
+ui/.next/
+
+# Electron build output
+electron/dist/
+electron/build/
+
 # IDE
 .vscode/
 .idea/
