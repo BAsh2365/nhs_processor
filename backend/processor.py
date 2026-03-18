@@ -2,6 +2,7 @@
 
 from typing import Optional, Dict, List
 from .anonymizer import Anonymizer, anonymize_text
+from .clinical_extractor import ClinicalDataExtractor
 from .pdf_processor import PDFProcessor
 from .recommendation import ClinicalRecommendationEngine
 from .risk_assessor import CardiovascularRiskAssessor
@@ -44,6 +45,7 @@ class MedicalDocumentProcessor:
             print(f"[AI] Active scopes: {', '.join(self.scopes)}")
 
         self.anonymizer = Anonymizer(config=self.config)
+        self.clinical_extractor = ClinicalDataExtractor()
 
         # Initialize local model engine
         print("[AI] Initializing local medical models...")
@@ -72,6 +74,11 @@ class MedicalDocumentProcessor:
                 raise ValueError("Insufficient text extracted from PDF")
 
             print(f"[AI] Extracted {len(text)} characters")
+
+            # Extract structured clinical data BEFORE anonymization
+            # (demographics, vitals, blood tests, medications, scores)
+            print("[AI] Extracting structured clinical data...")
+            clinical_data = self.clinical_extractor.extract_all(text)
 
             # Anonymize
             print("[AI] Anonymizing patient data...")
@@ -109,6 +116,7 @@ class MedicalDocumentProcessor:
                 "status": "success",
                 "patient_id_hash": patient_hash,
                 "summary": summary,
+                "clinical_data": clinical_data,
                 "risk_assessment": {
                     "urgency": urgency,
                     "red_flags": red_flags
@@ -161,6 +169,7 @@ class MedicalDocumentProcessor:
             if not text or len(text.strip()) < 50:
                 raise ValueError("Insufficient text provided")
 
+            clinical_data = self.clinical_extractor.extract_all(text)
             anonymized_text, patient_hash = anonymize_text(text, config=self.config)
 
             kb_results = kb.query(
@@ -181,6 +190,7 @@ class MedicalDocumentProcessor:
                 "status": "success",
                 "patient_id_hash": patient_hash,
                 "summary": summary,
+                "clinical_data": clinical_data,
                 "risk_assessment": {
                     "urgency": urgency,
                     "red_flags": red_flags

@@ -1345,6 +1345,49 @@
                             </div>
                             <div class="result-card-body" id="resSummary"></div>
                         </div>
+                        <!-- Clinical Data: Demographics & Vitals -->
+                        <div class="result-card anim" id="cardDemographics" style="display:none">
+                            <div class="result-card-hdr">
+                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0"/></svg>
+                                <h4>Patient Demographics</h4>
+                            </div>
+                            <div class="result-card-body" id="resDemographics"></div>
+                        </div>
+                        <div class="result-card anim" id="cardVitals" style="display:none">
+                            <div class="result-card-hdr">
+                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg>
+                                <h4>Vital Signs</h4>
+                            </div>
+                            <div class="result-card-body" id="resVitals"></div>
+                        </div>
+
+                        <!-- Clinical Data: Blood Tests -->
+                        <div class="result-card result-card--full anim" id="cardBloodTests" style="display:none">
+                            <div class="result-card-hdr">
+                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3"/></svg>
+                                <h4>Blood Test Results</h4>
+                            </div>
+                            <div class="result-card-body" id="resBloodTests"></div>
+                        </div>
+
+                        <!-- Clinical Data: Medications -->
+                        <div class="result-card result-card--full anim" id="cardMedications" style="display:none">
+                            <div class="result-card-hdr">
+                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25"/></svg>
+                                <h4>Medications</h4>
+                            </div>
+                            <div class="result-card-body" id="resMedications"></div>
+                        </div>
+
+                        <!-- Clinical Data: Clinical Scores -->
+                        <div class="result-card result-card--full anim" id="cardScores" style="display:none">
+                            <div class="result-card-hdr">
+                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 15.75V18m-7.5-6.75h.008v.008H8.25v-.008zm0 2.25h.008v.008H8.25V13.5z"/></svg>
+                                <h4>Clinical Scores &amp; Equations</h4>
+                            </div>
+                            <div class="result-card-body" id="resScores"></div>
+                        </div>
+
                         <div class="result-card anim">
                             <div class="result-card-hdr">
                                 <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z"/></svg>
@@ -1738,6 +1781,9 @@
             document.getElementById('resEvidence').textContent = rec.evidence_basis || 'No evidence references available.';
             document.getElementById('resReasoning').textContent = rec.reasoning || 'No clinical reasoning available.';
 
+            // ── Clinical Data ──
+            renderClinicalData(data.clinical_data || {});
+
             document.getElementById('resultsSection').classList.add('visible');
 
             // Stats
@@ -1758,6 +1804,114 @@
             });
 
             clearFile();
+        }
+
+        // ── Clinical Data Rendering ──────────────────────────
+        function renderClinicalData(cd) {
+            // Demographics
+            var dem = cd.patient_demographics || {};
+            var demEl = document.getElementById('resDemographics');
+            var demCard = document.getElementById('cardDemographics');
+            if (Object.keys(dem).length) {
+                demCard.style.display = '';
+                var html = '<div style="display:flex;flex-wrap:wrap;gap:8px">';
+                if (dem.age !== undefined) html += '<div style="background:var(--bg-hover);border-radius:8px;padding:8px 14px"><div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">Age</div><div style="font-size:14px;font-weight:600;color:var(--text)">' + dem.age + ' years</div></div>';
+                if (dem.sex) html += '<div style="background:var(--bg-hover);border-radius:8px;padding:8px 14px"><div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">Sex</div><div style="font-size:14px;font-weight:600;color:var(--text)">' + escapeHtml(dem.sex) + '</div></div>';
+                if (dem.height_cm !== undefined) html += '<div style="background:var(--bg-hover);border-radius:8px;padding:8px 14px"><div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">Height</div><div style="font-size:14px;font-weight:600;color:var(--text)">' + dem.height_cm + ' cm</div></div>';
+                if (dem.weight_kg !== undefined) html += '<div style="background:var(--bg-hover);border-radius:8px;padding:8px 14px"><div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">Weight</div><div style="font-size:14px;font-weight:600;color:var(--text)">' + dem.weight_kg + ' kg</div></div>';
+                if (dem.bmi_stated !== undefined) html += '<div style="background:var(--bg-hover);border-radius:8px;padding:8px 14px"><div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">BMI</div><div style="font-size:14px;font-weight:600;color:var(--text)">' + dem.bmi_stated + ' kg/m²</div></div>';
+                html += '</div>';
+                demEl.innerHTML = html;
+            } else { demCard.style.display = 'none'; }
+
+            // Vitals
+            var vit = cd.vitals || {};
+            var vitEl = document.getElementById('resVitals');
+            var vitCard = document.getElementById('cardVitals');
+            if (Object.keys(vit).length) {
+                vitCard.style.display = '';
+                var html = '<div style="display:flex;flex-wrap:wrap;gap:8px">';
+                if (vit.systolic_bp !== undefined && vit.diastolic_bp !== undefined) html += '<div style="background:var(--bg-hover);border-radius:8px;padding:8px 14px;text-align:center;min-width:80px"><div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">BP</div><div style="font-size:18px;font-weight:700;color:var(--text);font-family:JetBrains Mono,monospace">' + vit.systolic_bp + '/' + vit.diastolic_bp + '</div><div style="font-size:10px;color:var(--text-faint)">mmHg</div></div>';
+                if (vit.heart_rate !== undefined) html += '<div style="background:var(--bg-hover);border-radius:8px;padding:8px 14px;text-align:center;min-width:70px"><div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">HR</div><div style="font-size:18px;font-weight:700;color:var(--text);font-family:JetBrains Mono,monospace">' + vit.heart_rate + '</div><div style="font-size:10px;color:var(--text-faint)">bpm</div></div>';
+                if (vit.spo2 !== undefined) html += '<div style="background:var(--bg-hover);border-radius:8px;padding:8px 14px;text-align:center;min-width:70px"><div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">SpO2</div><div style="font-size:18px;font-weight:700;color:var(--text);font-family:JetBrains Mono,monospace">' + vit.spo2 + '%</div><div style="font-size:10px;color:var(--text-faint)">target >94%</div></div>';
+                if (vit.temperature_c !== undefined) html += '<div style="background:var(--bg-hover);border-radius:8px;padding:8px 14px;text-align:center;min-width:70px"><div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">Temp</div><div style="font-size:18px;font-weight:700;color:var(--text);font-family:JetBrains Mono,monospace">' + vit.temperature_c + '°C</div><div style="font-size:10px;color:var(--text-faint)">36.1–37.2</div></div>';
+                if (vit.respiratory_rate !== undefined) html += '<div style="background:var(--bg-hover);border-radius:8px;padding:8px 14px;text-align:center;min-width:70px"><div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em">RR</div><div style="font-size:18px;font-weight:700;color:var(--text);font-family:JetBrains Mono,monospace">' + vit.respiratory_rate + '</div><div style="font-size:10px;color:var(--text-faint)">/min</div></div>';
+                html += '</div>';
+                vitEl.innerHTML = html;
+            } else { vitCard.style.display = 'none'; }
+
+            // Blood Tests
+            var bts = cd.blood_tests || [];
+            var btEl = document.getElementById('resBloodTests');
+            var btCard = document.getElementById('cardBloodTests');
+            if (bts.length) {
+                btCard.style.display = '';
+                var flagStyle = { normal: 'color:#22c55e', low: 'color:#f59e0b', high: 'color:#f59e0b', critical_low: 'color:#ef4444;font-weight:700', critical_high: 'color:#ef4444;font-weight:700' };
+                var flagLabel = { normal: 'Normal', low: 'Low', high: 'High', critical_low: 'CRITICAL LOW', critical_high: 'CRITICAL HIGH' };
+                var html = '<table style="width:100%;border-collapse:collapse;font-size:13px">';
+                html += '<thead><tr style="color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:0.05em"><th style="text-align:left;padding:4px 8px">Test</th><th style="text-align:right;padding:4px 8px">Value</th><th style="text-align:left;padding:4px 8px">Unit</th><th style="text-align:left;padding:4px 8px">Ref Range</th><th style="text-align:left;padding:4px 8px">Status</th></tr></thead><tbody>';
+                bts.forEach(function(bt) {
+                    html += '<tr style="border-top:1px solid var(--border-subtle)">';
+                    html += '<td style="padding:6px 8px;color:var(--text);font-weight:500">' + escapeHtml(bt.abbr) + '</td>';
+                    html += '<td style="padding:6px 8px;text-align:right;font-family:JetBrains Mono,monospace;color:var(--text)">' + bt.value + '</td>';
+                    html += '<td style="padding:6px 8px;color:var(--text-muted)">' + escapeHtml(bt.unit) + '</td>';
+                    html += '<td style="padding:6px 8px;color:var(--text-muted)">' + escapeHtml(bt.reference_range) + '</td>';
+                    html += '<td style="padding:6px 8px;' + (flagStyle[bt.flag] || '') + '">' + (flagLabel[bt.flag] || bt.flag) + '</td>';
+                    html += '</tr>';
+                });
+                html += '</tbody></table>';
+                btEl.innerHTML = html;
+            } else { btCard.style.display = 'none'; }
+
+            // Medications
+            var meds = cd.medications || [];
+            var medEl = document.getElementById('resMedications');
+            var medCard = document.getElementById('cardMedications');
+            if (meds.length) {
+                medCard.style.display = '';
+                var html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px">';
+                meds.forEach(function(med) {
+                    var detail = [med.dose, med.frequency].filter(Boolean).join(' · ') || '';
+                    html += '<div style="background:var(--bg-hover);border-radius:8px;padding:10px 14px;border:1px solid var(--border-subtle)">';
+                    html += '<div style="font-size:14px;font-weight:600;color:var(--text);text-transform:capitalize">' + escapeHtml(med.name) + '</div>';
+                    if (detail) html += '<div style="font-size:12px;color:var(--text-secondary);margin-top:2px">' + escapeHtml(detail) + '</div>';
+                    html += '<div style="font-size:10px;color:var(--text-muted);margin-top:4px;background:var(--bg-surface);display:inline-block;padding:2px 6px;border-radius:4px">' + escapeHtml(med.drug_class) + '</div>';
+                    html += '</div>';
+                });
+                html += '</div>';
+                medEl.innerHTML = html;
+            } else { medCard.style.display = 'none'; }
+
+            // Clinical Scores
+            var scores = cd.clinical_scores || [];
+            var scEl = document.getElementById('resScores');
+            var scCard = document.getElementById('cardScores');
+            if (scores.length) {
+                scCard.style.display = '';
+                var html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px">';
+                scores.forEach(function(s) {
+                    html += '<div style="background:var(--bg-hover);border-radius:8px;padding:12px 14px;border:1px solid var(--border-subtle)">';
+                    html += '<div style="display:flex;justify-content:space-between;align-items:baseline">';
+                    html += '<span style="font-size:12px;font-weight:500;color:var(--text-secondary)">' + escapeHtml(s.name) + '</span>';
+                    html += '<span style="font-size:20px;font-weight:700;color:var(--text);font-family:JetBrains Mono,monospace">' + s.value + '<span style="font-size:11px;font-weight:400;color:var(--text-muted);margin-left:2px">' + escapeHtml(s.unit) + '</span></span>';
+                    html += '</div>';
+                    html += '<div style="font-size:11px;color:var(--text-muted);margin-top:4px;line-height:1.4">' + escapeHtml(s.interpretation) + '</div>';
+                    html += '<div style="font-size:10px;color:var(--text-faint);margin-top:4px;font-style:italic">' + escapeHtml(s.reference) + '</div>';
+                    if (s.components) {
+                        html += '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px">';
+                        Object.keys(s.components).forEach(function(k) {
+                            var v = s.components[k];
+                            var bg = v === 0 ? 'var(--bg-surface)' : 'rgba(59,130,246,0.1)';
+                            var col = v === 0 ? 'var(--text-faint)' : '#60a5fa';
+                            html += '<span style="font-size:10px;padding:2px 5px;border-radius:3px;background:' + bg + ';color:' + col + '">' + escapeHtml(k) + ': ' + v + '</span>';
+                        });
+                        html += '</div>';
+                    }
+                    html += '</div>';
+                });
+                html += '</div>';
+                scEl.innerHTML = html;
+            } else { scCard.style.display = 'none'; }
         }
 
         // ── Stats ─────────────────────────────────────────────

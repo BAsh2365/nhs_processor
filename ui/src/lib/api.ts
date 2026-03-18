@@ -25,10 +25,63 @@ export interface FrameworkConfig {
   urgency_levels: string[];
 }
 
+// --- Clinical data types ---
+
+export interface BloodTest {
+  key: string;
+  name: string;
+  abbr: string;
+  value: number;
+  unit: string;
+  category: string;
+  flag: "normal" | "low" | "high" | "critical_low" | "critical_high";
+  reference_range: string;
+}
+
+export interface Medication {
+  name: string;
+  drug_class: string;
+  dose: string | null;
+  frequency: string | null;
+}
+
+export interface ClinicalScore {
+  name: string;
+  value: number | string;
+  unit: string;
+  interpretation: string;
+  reference: string;
+  components?: Record<string, number | string>;
+}
+
+export interface ClinicalData {
+  patient_demographics: {
+    age?: number;
+    sex?: string;
+    height_cm?: number;
+    weight_kg?: number;
+    bmi_stated?: number;
+  };
+  vitals: {
+    systolic_bp?: number;
+    diastolic_bp?: number;
+    heart_rate?: number;
+    spo2?: number;
+    temperature_c?: number;
+    respiratory_rate?: number;
+  };
+  blood_tests: BloodTest[];
+  medications: Medication[];
+  clinical_scores: ClinicalScore[];
+}
+
+// --- Main result ---
+
 export interface ProcessResult {
   status: string;
   patient_id_hash?: string;
   summary?: string;
+  clinical_data?: ClinicalData;
   risk_assessment?: {
     urgency: string;
     red_flags: string[];

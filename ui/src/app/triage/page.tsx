@@ -8,11 +8,13 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   fetchFrameworks,
-  fetchFrameworkConfig,
   processDocument,
   type Framework,
   type Scope,
   type ProcessResult,
+  type BloodTest,
+  type ClinicalData,
+  type ClinicalScore,
 } from "@/lib/api";
 import {
   SparklesIcon,
@@ -21,11 +23,11 @@ import {
   ShieldCheckIcon,
   UploadIcon,
   CheckCircleIcon,
-  ClockIcon,
 } from "@/components/icons";
 
 const STEP_LABELS = [
   "Extracting text from document",
+  "Extracting clinical data",
   "Anonymising patient data",
   "Querying knowledge base",
   "Generating clinical reasoning",
@@ -43,6 +45,158 @@ const urgencyStyles: Record<string, { bg: string; border: string; text: string; 
   urgent: { bg: "bg-amber-50", border: "border-amber-200", text: "text-amber-700", badge: "bg-amber-100 text-amber-800" },
   routine: { bg: "bg-green-50", border: "border-green-200", text: "text-green-700", badge: "bg-green-100 text-green-800" },
 };
+
+const flagColors: Record<string, string> = {
+  normal: "text-green-700 bg-green-50",
+  low: "text-amber-700 bg-amber-50",
+  high: "text-amber-700 bg-amber-50",
+  critical_low: "text-red-700 bg-red-50 font-semibold",
+  critical_high: "text-red-700 bg-red-50 font-semibold",
+};
+
+const flagLabels: Record<string, string> = {
+  normal: "Normal",
+  low: "Low",
+  high: "High",
+  critical_low: "Critical Low",
+  critical_high: "Critical High",
+};
+
+const categoryLabels: Record<string, string> = {
+  cardiac_biomarkers: "Cardiac Biomarkers",
+  lipids: "Lipid Panel",
+  metabolic: "Metabolic",
+  haematology: "Haematology",
+  liver: "Liver Function",
+  thyroid: "Thyroid",
+  other: "Other",
+};
+
+// ── Blood test bar chart (pure CSS, no deps needed for this) ──
+
+function BloodTestBar({ test }: { test: BloodTest }) {
+  const isCritical = test.flag.startsWith("critical");
+  const isAbnormal = test.flag !== "normal";
+  return (
+    <tr className={`border-b border-slate-100 last:border-0 ${isCritical ? "bg-red-50/50" : ""}`}>
+      <td className="py-2 pr-3 text-xs font-medium text-slate-700 whitespace-nowrap">{test.abbr}</td>
+      <td className="py-2 pr-3 text-xs text-slate-900 font-mono tabular-nums text-right">{test.value}</td>
+      <td className="py-2 pr-3 text-xs text-slate-400">{test.unit}</td>
+      <td className="py-2 pr-3 text-xs text-slate-400">{test.reference_range}</td>
+      <td className="py-2">
+        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${flagColors[test.flag]}`}>
+          {isAbnormal && (
+            <svg className="mr-0.5 h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+              {test.flag.includes("high") ? (
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+              )}
+            </svg>
+          )}
+          {flagLabels[test.flag]}
+        </span>
+      </td>
+    </tr>
+  );
+}
+
+// ── Clinical score display ──
+
+function ScoreCard({ score }: { score: ClinicalScore }) {
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white p-3">
+      <div className="flex items-baseline justify-between gap-2">
+        <span className="text-xs font-medium text-slate-600">{score.name}</span>
+        <span className="text-lg font-bold text-slate-900 font-mono tabular-nums">
+          {score.value}<span className="text-xs font-normal text-slate-400 ml-0.5">{score.unit}</span>
+        </span>
+      </div>
+      <p className="mt-1 text-[11px] text-slate-500 leading-snug">{score.interpretation}</p>
+      <p className="mt-1 text-[10px] text-slate-400 italic">{score.reference}</p>
+      {score.components && (
+        <div className="mt-2 flex flex-wrap gap-1">
+          {Object.entries(score.components).map(([k, v]) => (
+            <span key={k} className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] ${
+              v === 0 ? "bg-slate-50 text-slate-400" : "bg-blue-50 text-blue-700"
+            }`}>
+              {k}: {String(v)}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Vitals gauge row ──
+
+function VitalItem({ label, value, unit, range }: { label: string; value?: number; unit: string; range?: string }) {
+  if (value === undefined || value === null) return null;
+  return (
+    <div className="flex flex-col items-center rounded-lg border border-slate-200 bg-white px-4 py-3 min-w-[100px]">
+      <span className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">{label}</span>
+      <span className="text-xl font-bold text-slate-900 font-mono tabular-nums">{value}</span>
+      <span className="text-[10px] text-slate-400">{unit}</span>
+      {range && <span className="text-[10px] text-slate-300 mt-0.5">{range}</span>}
+    </div>
+  );
+}
+
+// ── Blood test visual bar ──
+
+function BloodTestVisualBar({ test }: { test: BloodTest }) {
+  // Create a visual representation of where the value falls relative to the reference range
+  const ref = test.reference_range;
+  let low: number | null = null;
+  let high: number | null = null;
+
+  const rangeMatch = ref.match(/^(\d+\.?\d*)\s*[–-]\s*(\d+\.?\d*)$/);
+  const gtMatch = ref.match(/^>(\d+\.?\d*)$/);
+  const ltMatch = ref.match(/^<(\d+\.?\d*)$/);
+
+  if (rangeMatch) {
+    low = parseFloat(rangeMatch[1]);
+    high = parseFloat(rangeMatch[2]);
+  } else if (gtMatch) {
+    low = parseFloat(gtMatch[1]);
+    high = low * 2;
+  } else if (ltMatch) {
+    high = parseFloat(ltMatch[1]);
+    low = 0;
+  }
+
+  if (low === null || high === null) return null;
+
+  const range = high - low;
+  const min = low - range * 0.3;
+  const max = high + range * 0.3;
+  const totalRange = max - min;
+
+  const normalStart = ((low - min) / totalRange) * 100;
+  const normalWidth = (range / totalRange) * 100;
+  const valuePos = Math.max(0, Math.min(100, ((test.value - min) / totalRange) * 100));
+
+  return (
+    <div className="w-full h-3 relative mt-1 mb-0.5">
+      <div className="absolute inset-0 rounded-full bg-slate-100" />
+      <div
+        className="absolute top-0 h-full rounded-full bg-green-200"
+        style={{ left: `${normalStart}%`, width: `${normalWidth}%` }}
+      />
+      <div
+        className={`absolute top-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full border-2 border-white shadow-sm ${
+          test.flag === "normal" ? "bg-green-500" : test.flag.startsWith("critical") ? "bg-red-500" : "bg-amber-500"
+        }`}
+        style={{ left: `calc(${valuePos}% - 5px)` }}
+      />
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════
+// MAIN PAGE
+// ════════════════════════════════════════════════════════════
 
 export default function TriagePage() {
   const searchParams = useSearchParams();
@@ -129,18 +283,38 @@ export default function TriagePage() {
   const fmtSize = (b: number) =>
     b < 1024 ? `${b} B` : b < 1048576 ? `${(b / 1024).toFixed(1)} KB` : `${(b / 1048576).toFixed(1)} MB`;
 
-  // Results rendering
+  // ════════════════════════════════════════════
+  // RESULTS VIEW
+  // ════════════════════════════════════════════
+
   if (result) {
     const rec = result.recommendation;
     const risk = result.risk_assessment;
+    const cd = result.clinical_data;
     const urgency = rec?.urgency || risk?.urgency || "ROUTINE";
     const uc = urgencyClass(urgency);
     const styles = urgencyStyles[uc];
     const allFlags = [...new Set([...(risk?.red_flags || []), ...(rec?.red_flags || [])])];
     const conf = (rec?.confidence_level || "moderate").toLowerCase();
 
+    // Group blood tests by category
+    const bloodTestsByCategory: Record<string, BloodTest[]> = {};
+    if (cd?.blood_tests) {
+      for (const bt of cd.blood_tests) {
+        const cat = bt.category || "other";
+        if (!bloodTestsByCategory[cat]) bloodTestsByCategory[cat] = [];
+        bloodTestsByCategory[cat].push(bt);
+      }
+    }
+
+    const hasVitals = cd?.vitals && Object.keys(cd.vitals).length > 0;
+    const hasDemographics = cd?.patient_demographics && Object.keys(cd.patient_demographics).length > 0;
+    const hasBloodTests = cd?.blood_tests && cd.blood_tests.length > 0;
+    const hasMeds = cd?.medications && cd.medications.length > 0;
+    const hasScores = cd?.clinical_scores && cd.clinical_scores.length > 0;
+
     return (
-      <div className="mx-auto max-w-4xl space-y-6">
+      <div className="mx-auto max-w-5xl space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold tracking-tight text-slate-900">Triage Result</h2>
@@ -149,7 +323,7 @@ export default function TriagePage() {
           <Button onClick={reset} variant="outline">New Analysis</Button>
         </div>
 
-        {/* Urgency Banner */}
+        {/* ── Urgency Banner ── */}
         <div className={`rounded-xl ${styles.bg} ${styles.border} border p-6`}>
           <div className="flex items-center gap-5 flex-wrap">
             <div className={`flex h-14 w-14 items-center justify-center rounded-2xl ${styles.bg} ${styles.text}`}>
@@ -175,18 +349,219 @@ export default function TriagePage() {
           </div>
         </div>
 
-        {/* Cards */}
-        <div className="grid gap-4 md:grid-cols-2">
-          <Card className="md:col-span-2">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-sm"><DocumentIcon className="h-4 w-4 text-slate-400" />Clinical Summary</CardTitle>
-            </CardHeader>
-            <CardContent><p className="text-sm leading-relaxed text-slate-700">{result.summary || "No summary available."}</p></CardContent>
-          </Card>
+        {/* ── Patient Demographics & Vitals ── */}
+        {(hasDemographics || hasVitals) && (
+          <div className="grid gap-4 md:grid-cols-2">
+            {/* Demographics */}
+            {hasDemographics && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-sm">
+                    <svg className="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                    </svg>
+                    Patient Demographics
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-3">
+                    {cd!.patient_demographics.age !== undefined && (
+                      <div className="rounded-lg bg-slate-50 px-3 py-2">
+                        <div className="text-[10px] text-slate-400 uppercase tracking-wider">Age</div>
+                        <div className="text-sm font-semibold text-slate-900">{cd!.patient_demographics.age} years</div>
+                      </div>
+                    )}
+                    {cd!.patient_demographics.sex && (
+                      <div className="rounded-lg bg-slate-50 px-3 py-2">
+                        <div className="text-[10px] text-slate-400 uppercase tracking-wider">Sex</div>
+                        <div className="text-sm font-semibold text-slate-900">{cd!.patient_demographics.sex}</div>
+                      </div>
+                    )}
+                    {cd!.patient_demographics.height_cm !== undefined && (
+                      <div className="rounded-lg bg-slate-50 px-3 py-2">
+                        <div className="text-[10px] text-slate-400 uppercase tracking-wider">Height</div>
+                        <div className="text-sm font-semibold text-slate-900">{cd!.patient_demographics.height_cm} cm</div>
+                      </div>
+                    )}
+                    {cd!.patient_demographics.weight_kg !== undefined && (
+                      <div className="rounded-lg bg-slate-50 px-3 py-2">
+                        <div className="text-[10px] text-slate-400 uppercase tracking-wider">Weight</div>
+                        <div className="text-sm font-semibold text-slate-900">{cd!.patient_demographics.weight_kg} kg</div>
+                      </div>
+                    )}
+                    {cd!.patient_demographics.bmi_stated !== undefined && (
+                      <div className="rounded-lg bg-slate-50 px-3 py-2 col-span-2">
+                        <div className="text-[10px] text-slate-400 uppercase tracking-wider">BMI (stated)</div>
+                        <div className="text-sm font-semibold text-slate-900">{cd!.patient_demographics.bmi_stated} kg/m²</div>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
+            {/* Vitals */}
+            {hasVitals && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-sm">
+                    <svg className="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                    </svg>
+                    Vital Signs
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-3">
+                    {cd!.vitals.systolic_bp !== undefined && cd!.vitals.diastolic_bp !== undefined && (
+                      <div className="flex flex-col items-center rounded-lg border border-slate-200 bg-white px-4 py-3 min-w-[100px]">
+                        <span className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">BP</span>
+                        <span className="text-xl font-bold text-slate-900 font-mono tabular-nums">
+                          {cd!.vitals.systolic_bp}/{cd!.vitals.diastolic_bp}
+                        </span>
+                        <span className="text-[10px] text-slate-400">mmHg</span>
+                      </div>
+                    )}
+                    <VitalItem label="HR" value={cd!.vitals.heart_rate} unit="bpm" range="60-100" />
+                    <VitalItem label="SpO2" value={cd!.vitals.spo2} unit="%" range=">94%" />
+                    <VitalItem label="Temp" value={cd!.vitals.temperature_c} unit="°C" range="36.1-37.2" />
+                    <VitalItem label="RR" value={cd!.vitals.respiratory_rate} unit="/min" range="12-20" />
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
+
+        {/* ── Clinical Summary ── */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <DocumentIcon className="h-4 w-4 text-slate-400" />Clinical Summary
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm leading-relaxed text-slate-700">{result.summary || "No summary available."}</p>
+          </CardContent>
+        </Card>
+
+        {/* ── Blood Tests ── */}
+        {hasBloodTests && (
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-sm"><AlertTriangleIcon className="h-4 w-4 text-slate-400" />Red Flags</CardTitle>
+              <CardTitle className="flex items-center gap-2 text-sm">
+                <svg className="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5" />
+                </svg>
+                Blood Test Results
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {Object.entries(bloodTestsByCategory).map(([cat, tests]) => (
+                  <div key={cat}>
+                    <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                      {categoryLabels[cat] || cat}
+                    </h4>
+                    <div className="rounded-lg border border-slate-200 overflow-hidden">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="bg-slate-50 text-[10px] uppercase tracking-wider text-slate-400">
+                            <th className="py-1.5 px-3 text-left font-medium">Test</th>
+                            <th className="py-1.5 px-3 text-right font-medium">Value</th>
+                            <th className="py-1.5 px-3 text-left font-medium">Unit</th>
+                            <th className="py-1.5 px-3 text-left font-medium">Ref Range</th>
+                            <th className="py-1.5 px-3 text-left font-medium">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {tests.map((t) => (
+                            <BloodTestBar key={t.key} test={t} />
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    {/* Visual bars */}
+                    <div className="mt-2 space-y-1 px-1">
+                      {tests.map((t) => (
+                        <div key={`bar-${t.key}`}>
+                          <div className="flex items-center justify-between text-[10px] text-slate-400">
+                            <span>{t.abbr}</span>
+                            <span className="font-mono">{t.value} {t.unit}</span>
+                          </div>
+                          <BloodTestVisualBar test={t} />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ── Medications ── */}
+        {hasMeds && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-sm">
+                <svg className="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
+                </svg>
+                Medications ({cd!.medications.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {cd!.medications.map((med, i) => (
+                  <div key={i} className="flex items-start gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2.5">
+                    <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-slate-100 text-[10px] font-bold text-slate-500">
+                      Rx
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-sm font-medium text-slate-900 capitalize truncate">{med.name}</div>
+                      <div className="text-[11px] text-slate-500">
+                        {[med.dose, med.frequency].filter(Boolean).join(" · ") || med.drug_class}
+                      </div>
+                      <Badge variant="outline" className="mt-1 text-[10px] border-slate-200 text-slate-400">
+                        {med.drug_class}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ── Clinical Scores ── */}
+        {hasScores && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-sm">
+                <svg className="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 15.75V18m-7.5-6.75h.008v.008H8.25v-.008zm0 2.25h.008v.008H8.25V13.5zm0 2.25h.008v.008H8.25v-.008zm0 2.25h.008v.008H8.25V18zm2.498-6.75h.007v.008h-.007v-.008zm0 2.25h.007v.008h-.007V13.5zm0 2.25h.007v.008h-.007v-.008zm0 2.25h.007v.008h-.007V18zm2.504-6.75h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V13.5zm0 2.25h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V18zm2.498-6.75h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V13.5zM8.25 6h7.5v2.25h-7.5V6zM12 2.25c-1.892 0-3.758.11-5.593.322C5.307 2.7 4.5 3.65 4.5 4.757V19.5a2.25 2.25 0 002.25 2.25h10.5a2.25 2.25 0 002.25-2.25V4.757c0-1.108-.806-2.057-1.907-2.185A48.507 48.507 0 0012 2.25z" />
+                </svg>
+                Clinical Scores & Equations
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {cd!.clinical_scores.map((s, i) => (
+                  <ScoreCard key={i} score={s} />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ── Red Flags & Evidence ── */}
+        <div className="grid gap-4 md:grid-cols-2">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-sm">
+                <AlertTriangleIcon className="h-4 w-4 text-slate-400" />Red Flags
+              </CardTitle>
             </CardHeader>
             <CardContent>
               {allFlags.length > 0 ? (
@@ -203,27 +578,38 @@ export default function TriagePage() {
 
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-sm"><ShieldCheckIcon className="h-4 w-4 text-slate-400" />Evidence Basis</CardTitle>
+              <CardTitle className="flex items-center gap-2 text-sm">
+                <ShieldCheckIcon className="h-4 w-4 text-slate-400" />Evidence Basis
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-xs leading-relaxed text-slate-600 whitespace-pre-wrap">{rec?.evidence_basis || "No evidence references available."}</p>
-            </CardContent>
-          </Card>
-
-          <Card className="md:col-span-2">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-sm"><SparklesIcon className="h-4 w-4 text-slate-400" />Clinical Reasoning</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="rounded-lg border border-slate-100 bg-slate-50 p-4 text-xs leading-relaxed text-slate-600 whitespace-pre-wrap max-h-64 overflow-y-auto">
-                {rec?.reasoning || "No clinical reasoning available."}
-              </div>
+              <p className="text-xs leading-relaxed text-slate-600 whitespace-pre-wrap max-h-40 overflow-y-auto">
+                {rec?.evidence_basis || "No evidence references available."}
+              </p>
             </CardContent>
           </Card>
         </div>
+
+        {/* ── Clinical Reasoning ── */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <SparklesIcon className="h-4 w-4 text-slate-400" />Clinical Reasoning
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="rounded-lg border border-slate-100 bg-slate-50 p-4 text-xs leading-relaxed text-slate-600 whitespace-pre-wrap max-h-64 overflow-y-auto">
+              {rec?.reasoning || "No clinical reasoning available."}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
+
+  // ════════════════════════════════════════════
+  // UPLOAD FORM VIEW
+  // ════════════════════════════════════════════
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
