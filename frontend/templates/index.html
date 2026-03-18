@@ -446,7 +446,7 @@
         // Load available frameworks and scopes on page load
         async function loadFrameworkOptions() {
             try {
-                const resp = await fetch('/frameworks');
+                const resp = await fetch('/frameworks', {credentials: 'same-origin'});
                 const data = await resp.json();
 
                 // Populate framework dropdown
@@ -477,7 +477,7 @@
         // Update branding when framework changes
         async function updateBranding(frameworkId) {
             try {
-                const resp = await fetch('/framework-config/' + frameworkId);
+                const resp = await fetch('/framework-config/' + frameworkId, {credentials: 'same-origin'});
                 const data = await resp.json();
 
                 if (data.branding) {
@@ -538,8 +538,15 @@
             try {
                 const response = await fetch('/process', {
                     method: 'POST',
-                    body: formData
+                    body: formData,
+                    credentials: 'same-origin'
                 });
+
+                // Handle auth redirect
+                if (response.status === 401 || response.redirected) {
+                    window.location.href = '/login';
+                    return;
+                }
 
                 const data = await response.json();
                 loading.style.display = 'none';

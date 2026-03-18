@@ -1,17 +1,39 @@
 from __future__ import annotations
-import os, json, warnings, re
+import os, json, warnings, re, threading
 from typing import List, Optional, Dict
 import torch
 from transformers import (
     AutoTokenizer,
     AutoModelForCausalLM,
     pipeline,
-    BartForConditionalGeneration,
-    BartTokenizer
 )
 
 # Global model cache keyed by model_id — prevents redundant loading across frameworks
 _model_cache: Dict[str, object] = {}
+_cache_lock = threading.Lock()
+
+# Maximum number of cached model entries before eviction
+_MAX_CACHE_ENTRIES = 4
+
+
+def _evict_cache_if_needed() -> None:
+    """Evict oldest cache entries and free GPU memory when cache exceeds limit."""
+    while len(_model_cache) >= _MAX_CACHE_ENTRIES:
+        oldest_key = next(iter(_model_cache))
+        entry = _model_cache.pop(oldest_key)
+        del entry
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+        print(f"[ModelCache] Evicted: {oldest_key}")
+
+
+def _get_torch_dtype(device: str):
+    """Return fp16 on CUDA, fp32 on CPU."""
+    if device == "cuda":
+        if torch.cuda.is_bf16_supported():
+            return torch.bfloat16
+        return torch.float16
+    return torch.float32
 
 
 class ClinicalRecommendationEngine:
@@ -23,14 +45,15 @@ class ClinicalRecommendationEngine:
 
     def __init__(self, use_gpu: bool = None, config: Optional[dict] = None):
         """
-        Initialize local medical models.
+        Initialize local medical models (lazy-loaded on first use).
 
         Args:
             use_gpu: If True, use GPU if available. If None, auto-detect.
             config: Framework configuration dict. Defaults to NHS UK behavior.
         """
         self.device = "cuda" if (use_gpu or (use_gpu is None and torch.cuda.is_available())) else "cpu"
-        print(f"[ClinicalRecommendationEngine] Using device: {self.device}")
+        self._dtype = _get_torch_dtype(self.device)
+        print(f"[ClinicalRecommendationEngine] Using device: {self.device} (dtype={self._dtype})")
 
         self.config = config or {}
 
@@ -85,53 +108,95 @@ class ClinicalRecommendationEngine:
         self._biogpt_tokenizer = None
         self._init_error = None
 
-        # Pre-load summarizer (lightweight)
-        try:
-            self._load_summarizer()
-        except Exception as e:
-            self._init_error = f"Model initialization warning: {e}"
-            warnings.warn(self._init_error)
-
     def _load_summarizer(self):
-        """Load summarization model (if not already loaded)"""
-        if self._summarizer is None:
-            cache_key = f"summarizer:{self._summarizer_model_id}"
+        """Load summarization model with fp16 on CUDA, cache-eviction, and OOM fallback."""
+        if self._summarizer is not None:
+            return
+        cache_key = f"summarizer:{self._summarizer_model_id}"
+        with _cache_lock:
             if cache_key in _model_cache:
                 self._summarizer = _model_cache[cache_key]
                 return
-            print(f"[AI] Loading summarization model: {self._summarizer_model_id}...")
+            _evict_cache_if_needed()
+        print(f"[AI] Loading summarization model: {self._summarizer_model_id}...")
+        try:
             self._summarizer = pipeline(
                 "summarization",
                 model=self._summarizer_model_id,
                 tokenizer=AutoTokenizer.from_pretrained(
                     self._summarizer_model_id, model_max_length=1024
                 ),
-                device=0 if self.device == "cuda" else -1
+                device=0 if self.device == "cuda" else -1,
+                torch_dtype=self._dtype,
             )
+        except RuntimeError as e:
+            if "CUDA" in str(e) or "out of memory" in str(e).lower():
+                print(f"[AI] CUDA OOM loading summarizer, falling back to CPU")
+                torch.cuda.empty_cache()
+                self.device = "cpu"
+                self._dtype = torch.float32
+                self._summarizer = pipeline(
+                    "summarization",
+                    model=self._summarizer_model_id,
+                    tokenizer=AutoTokenizer.from_pretrained(
+                        self._summarizer_model_id, model_max_length=1024
+                    ),
+                    device=-1,
+                )
+            else:
+                raise
+        with _cache_lock:
             _model_cache[cache_key] = self._summarizer
-            print(f"[AI] Summarizer loaded on {self.device}")
+        print(f"[AI] Summarizer loaded on {self.device}")
 
     def _load_biogpt(self):
-        """Load medical reasoning model (lazy load - heavy model)"""
-        if self._biogpt_model is None:
-            cache_key = f"reasoning:{self._reasoning_model_id}"
+        """Load medical reasoning model with fp16 on CUDA, cache-eviction, and OOM fallback."""
+        if self._biogpt_model is not None:
+            return
+        cache_key = f"reasoning:{self._reasoning_model_id}"
+        with _cache_lock:
             if cache_key in _model_cache:
                 cached = _model_cache[cache_key]
                 self._biogpt_tokenizer = cached["tokenizer"]
                 self._biogpt_model = cached["model"]
                 return
-            print(f"[AI] Loading medical reasoning model: {self._reasoning_model_id} (this may take a minute)...")
-            try:
-                self._biogpt_tokenizer = AutoTokenizer.from_pretrained(self._reasoning_model_id)
-                self._biogpt_model = AutoModelForCausalLM.from_pretrained(self._reasoning_model_id)
-                self._biogpt_model.to(self.device)
-                self._biogpt_model.eval()
+            _evict_cache_if_needed()
+        print(f"[AI] Loading medical reasoning model: {self._reasoning_model_id} (this may take a minute)...")
+        try:
+            self._biogpt_tokenizer = AutoTokenizer.from_pretrained(self._reasoning_model_id)
+            self._biogpt_model = AutoModelForCausalLM.from_pretrained(
+                self._reasoning_model_id, torch_dtype=self._dtype
+            )
+            self._biogpt_model.to(self.device)
+            self._biogpt_model.eval()
+            with _cache_lock:
                 _model_cache[cache_key] = {"tokenizer": self._biogpt_tokenizer, "model": self._biogpt_model}
-                print(f"[AI] Medical reasoning model loaded on {self.device}")
-            except Exception as e:
+            print(f"[AI] Medical reasoning model loaded on {self.device}")
+        except RuntimeError as e:
+            if "CUDA" in str(e) or "out of memory" in str(e).lower():
+                print(f"[AI] CUDA OOM loading BioGPT, falling back to CPU")
+                torch.cuda.empty_cache()
+                self.device = "cpu"
+                self._dtype = torch.float32
+                try:
+                    self._biogpt_model = AutoModelForCausalLM.from_pretrained(self._reasoning_model_id)
+                    self._biogpt_model.to("cpu")
+                    self._biogpt_model.eval()
+                    with _cache_lock:
+                        _model_cache[cache_key] = {"tokenizer": self._biogpt_tokenizer, "model": self._biogpt_model}
+                    print(f"[AI] Medical reasoning model loaded on CPU (fallback)")
+                except Exception as e2:
+                    warnings.warn(f"CPU fallback also failed: {e2}. Will use rule-based fallbacks.")
+                    self._biogpt_model = None
+                    self._biogpt_tokenizer = None
+            else:
                 warnings.warn(f"Medical reasoning model loading failed: {e}. Will use rule-based fallbacks.")
                 self._biogpt_model = None
                 self._biogpt_tokenizer = None
+        except Exception as e:
+            warnings.warn(f"Medical reasoning model loading failed: {e}. Will use rule-based fallbacks.")
+            self._biogpt_model = None
+            self._biogpt_tokenizer = None
 
     def _sanitize_output(self, text: str) -> str:
         """
@@ -209,60 +274,16 @@ class ClinicalRecommendationEngine:
 
             return summary if summary else self._extractive_fallback(t, max_words)
 
+        except RuntimeError as e:
+            if "CUDA" in str(e) or "out of memory" in str(e).lower():
+                torch.cuda.empty_cache()
+                warnings.warn(f"CUDA OOM during summarization, using extractive fallback.")
+            else:
+                warnings.warn(f"Summarization failed: {e}. Using extractive fallback.")
+            return self._extractive_fallback(t, max_words)
         except Exception as e:
             warnings.warn(f"Summarization failed: {e}. Using extractive fallback.")
             return self._extractive_fallback(t, max_words)
-
-    def _try_biogpt_summary(self, text: str, style_instructions: str, max_words: int) -> Optional[str]:
-        """Attempt to use medical reasoning model for summarization with advanced prompting"""
-        try:
-            self._load_biogpt()
-            if self._biogpt_model is None:
-                return None
-
-            prompt = (
-                f"{self._system_context} "
-                f"{style_instructions} Use Exec style writing. Do not invent facts.\n\n"
-                f"Clinical letter:\n{text[:800]}\n\n"
-                f"Summary:"
-            )
-
-            inputs = self._biogpt_tokenizer(
-                prompt,
-                return_tensors="pt",
-                max_length=1024,
-                truncation=True
-            ).to(self.device)
-
-            with torch.no_grad():
-                outputs = self._biogpt_model.generate(
-                    **inputs,
-                    max_length=inputs['input_ids'].shape[1] + int(max_words * 2),
-                    num_return_sequences=1,
-                    temperature=0.7,
-                    do_sample=True,
-                    top_p=0.9,
-                    pad_token_id=self._biogpt_tokenizer.eos_token_id
-                )
-
-            generated = self._biogpt_tokenizer.decode(outputs[0], skip_special_tokens=True)
-
-            if "Summary:" in generated:
-                summary = generated.split("Summary:")[-1].strip()
-            else:
-                summary = generated.strip()
-
-            summary = self._sanitize_output(summary)
-
-            words = summary.split()
-            if len(words) > max_words * 1.5:
-                summary = " ".join(words[:int(max_words * 1.5)])
-
-            return summary if summary and len(summary) > 20 else None
-
-        except Exception as e:
-            warnings.warn(f"Medical reasoning summary failed: {e}")
-            return None
 
     def generate_recommendation(self, text: str, context_snippets: Optional[List[Dict]] = None) -> Dict:
         """
@@ -364,19 +385,16 @@ class ClinicalRecommendationEngine:
 
             return None
 
+        except RuntimeError as e:
+            if "CUDA" in str(e) or "out of memory" in str(e).lower():
+                torch.cuda.empty_cache()
+                warnings.warn("CUDA OOM during recommendation generation, falling back to heuristic.")
+            else:
+                warnings.warn(f"Medical reasoning recommendation failed: {e}")
+            return None
         except Exception as e:
             warnings.warn(f"Medical reasoning recommendation failed: {e}")
             return None
-
-    def _format_kb_context(self, snippets: List[Dict]) -> str:
-        """Format knowledge base snippets for context"""
-        contexts = []
-        for item in snippets[:3]:
-            meta = item.get("meta") or {}
-            src = meta.get("title", "guideline")
-            text = item.get("text", "")[:300]
-            contexts.append(f"[{src}]: {text}")
-        return " | ".join(contexts)
 
     # ---------- FALLBACKS ----------
 

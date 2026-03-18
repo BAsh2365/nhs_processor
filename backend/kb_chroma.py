@@ -39,7 +39,9 @@ def _ensure(collection_name: str = "nhs_kb", embed_model_id: Optional[str] = Non
     if _embed_model is None:
         try:
             from sentence_transformers import SentenceTransformer
-            _embed_model = SentenceTransformer(_embed_model_id)
+            import torch
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+            _embed_model = SentenceTransformer(_embed_model_id, device=device)
         except Exception as e:
             warnings.warn(f"kb_chroma: embedding model failed ({e}).")
             return _client, None, None
@@ -168,10 +170,6 @@ def ingest_folder_chunked(folder: str, *, collection_name: str = "nhs_kb",
                         flush_encode_batch()
 
                 flush_encode_batch()
-                try:
-                    client.persist()
-                except Exception:
-                    pass
                 print(f"Indexed (chunked) [{collection_name}]: {fname} -> {len(chunks)} chunks")
             except Exception as e:
                 warnings.warn(f"kb_chroma: failed ingest for {fname}: {e}")

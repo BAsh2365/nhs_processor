@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Medical Document Processor</title>
+    <style>
+        :root {
+            --primary-color: #005EB8;
+            --secondary-color: #003087;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .login-card h1 {
+            color: var(--primary-color);
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .login-card p.subtitle {
+            color: #425563;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #425563;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid #E8EDEE;
+            border-radius: 5px;
+            font-size: 15px;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .login-btn:hover { background: var(--secondary-color); }
+
+        .error-msg {
+            background: #FFF4E5;
+            border-left: 4px solid #DA291C;
+            padding: 12px;
+            border-radius: 4px;
+            color: #DA291C;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .security-note {
+            margin-top: 20px;
+            text-align: center;
+            color: #768692;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <h1>Medical Document Processor</h1>
+        <p class="subtitle">Authenticate to access the triage system</p>
+
+        {% if error %}
+        <div class="error-msg">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST" action="/login">
+            <div class="form-group">
+                <label for="password">API Key</label>
+                <input type="password" id="password" name="password"
+                       placeholder="Enter your API key" required autocomplete="current-password">
+            </div>
+            <button type="submit" class="login-btn">Sign In</button>
+        </form>
+
+        <div class="security-note">
+            Access is restricted to authorised personnel only.<br>
+            All access attempts are logged for DTAC compliance.
+        </div>
+    </div>
+</body>
+</html>

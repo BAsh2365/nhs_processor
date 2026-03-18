@@ -7,6 +7,7 @@ from .pdf_processor import PDFProcessor
 from .recommendation import ClinicalRecommendationEngine
 from .risk_assessor import CardiovascularRiskAssessor
 from .config_loader import load_framework
+from .logger import NHSComplianceLogger
 try:
     from . import kb_chroma as kb
 except ImportError:
@@ -34,6 +35,7 @@ class MedicalDocumentProcessor:
         self.user_id = user_id
         self.framework_id = framework_id
         self.scopes = scopes or []
+        self._logger = NHSComplianceLogger()
 
         # Load merged config
         self.config = load_framework(framework_id, scopes=self.scopes)
@@ -123,6 +125,16 @@ class MedicalDocumentProcessor:
                 ]
             }
 
+            self._logger.log_access(
+                action="DOCUMENT_PROCESSED",
+                patient_id_hash=patient_hash,
+                user_id=self.user_id,
+                details=f"framework={framework_name}, text_len={len(text)}"
+            )
+            self._logger.log_recommendation(
+                patient_id_hash=patient_hash,
+                recommendation=recommendation
+            )
             print(f"[AUDIT] Processed document for patient hash: {patient_hash[:16]}...")
             return result
 
@@ -130,6 +142,11 @@ class MedicalDocumentProcessor:
             print(f"[ERROR] Processing failed: {e}")
             import traceback
             traceback.print_exc()
+            self._logger.log_error(
+                where="process_document",
+                patient_id_hash="unknown",
+                error=str(e)
+            )
 
             return {
                 "status": "error",
@@ -174,11 +191,26 @@ class MedicalDocumentProcessor:
                 "framework": framework_name
             }
 
+            self._logger.log_access(
+                action="TEXT_PROCESSED",
+                patient_id_hash=patient_hash,
+                user_id=self.user_id,
+                details=f"framework={framework_name}"
+            )
+            self._logger.log_recommendation(
+                patient_id_hash=patient_hash,
+                recommendation=recommendation
+            )
             print(f"[AUDIT] Processed text for patient hash: {patient_hash[:16]}...")
             return result
 
         except Exception as e:
             print(f"[ERROR] Text processing failed: {e}")
+            self._logger.log_error(
+                where="process_text",
+                patient_id_hash="unknown",
+                error=str(e)
+            )
             return {
                 "status": "error",
                 "error": "An internal error has occurred."

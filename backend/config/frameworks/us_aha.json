@@ -73,7 +73,7 @@
       "replacement": "MRN: [REDACTED]"
     },
     "zip_code": {
-      "pattern": "\\b\\d{5}(?:-\\d{4})?\\b",
+      "pattern": "(?:ZIP|Zip|zip)\\s*(?:Code)?:?\\s*\\d{5}(?:-\\d{4})?|\\b(?:Address|address)[^\\n]{0,60}\\b(\\d{5}(?:-\\d{4})?)\\b",
       "replacement": "[ZIP REDACTED]"
     }
   },

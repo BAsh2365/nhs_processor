@@ -7,6 +7,7 @@ Loads framework JSON configs and merges optional scope overlays.
 import os
 import json
 import re
+import copy
 from typing import Optional
 
 _CONFIG_DIR = os.path.join(os.path.dirname(__file__), "config")
@@ -86,7 +87,7 @@ def load_framework(framework_id: str = "nhs_uk", scopes: Optional[list] = None) 
     if not os.path.isfile(framework_path):
         raise FileNotFoundError(f"Framework config not found: {framework_path}")
 
-    config = _load_json(framework_path)
+    config = copy.deepcopy(_load_json(framework_path))
 
     if scopes:
         for scope_id in scopes:

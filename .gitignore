@@ -1,2 +1,24 @@
 /.env
 /.venv
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# Runtime data
+backend/audit_logs/
+backend/kb_chroma_store/
+frontend/uploads/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# TLS certs (dev)
+deploy/certs/

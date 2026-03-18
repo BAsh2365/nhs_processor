@@ -1,0 +1,13 @@
+__pycache__
+*.pyc
+.git
+.env
+.env.example
+*.egg-info
+backend/audit_logs/
+backend/kb_chroma_store/
+frontend/uploads/
+.pytest_cache
+tests/
+deploy/
+.github/
