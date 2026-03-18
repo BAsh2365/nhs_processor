@@ -1,5 +1,0 @@
-# Additional dependencies for server/cloud deployment (not needed for desktop app)
--r requirements.txt
-
-gunicorn>=22.0.0       # Production WSGI server (Linux/cloud)
-waitress>=3.0.0        # Production WSGI server (Windows server)

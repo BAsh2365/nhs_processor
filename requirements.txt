@@ -1,9 +1,11 @@
 
-# Web Framework (core — required for desktop and server)
+# Web Framework
 Flask==3.1.3
 Werkzeug>=3.0.6
-flask-cors>=4.0.0      # CORS support for API
+gunicorn>=22.0.0       # Production WSGI server (Linux/cloud)
+waitress>=3.0.0        # Production WSGI server (Windows)
 flask-limiter>=3.5.0   # Rate limiting per IP
+flask-cors>=4.0.0      # CORS support for Next.js frontend
 
 # PDF Processing
 pypdf>=6.1.3

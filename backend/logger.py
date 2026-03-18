@@ -8,10 +8,7 @@ class NHSComplianceLogger:
 
     def __init__(self, log_dir: Optional[str] = None):
         if log_dir is None:
-            log_dir = os.environ.get(
-                'NHS_AUDIT_LOG_DIR',
-                os.path.join(os.path.dirname(__file__), 'audit_logs')
-            )
+            log_dir = os.path.join(os.path.dirname(__file__), 'audit_logs')
         os.makedirs(log_dir, exist_ok=True)
         self.log_file = os.path.join(log_dir, f"audit_{datetime.now().strftime('%Y%m%d')}.log")
 

@@ -24,11 +24,10 @@ def create_app():
     """Application factory for WSGI servers (gunicorn, waitress)."""
     app = Flask(__name__)
 
-    # CORS: allow only localhost origins (desktop app and local dev)
+    # CORS: allow localhost origins for Next.js dev server
     CORS(app, supports_credentials=True, origins=[
         "http://127.0.0.1:*",
         "http://localhost:*",
-        "file://*",  # Electron loads from file:// protocol
     ])
 
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
@@ -76,10 +75,7 @@ def create_app():
         print("[RateLimit] flask-limiter not installed — rate limiting DISABLED")
 
     # ── Upload folder ─────────────────────────────────────────────────
-    UPLOAD_FOLDER = os.environ.get(
-        'NHS_UPLOAD_DIR',
-        os.path.join(os.path.dirname(__file__), 'uploads')
-    )
+    UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
     ALLOWED_EXTENSIONS = {'pdf', 'txt'}
