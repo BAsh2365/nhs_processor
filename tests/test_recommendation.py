@@ -79,7 +79,7 @@ class TestInitialization:
         assert "fallback_signals" in achd_engine.config
 
     def test_model_ids_from_config(self, nhs_engine):
-        assert nhs_engine._reasoning_model_id == "microsoft/BioGPT-Large"
+        assert nhs_engine._reasoning_model_id == "microsoft/BioGPT"
         assert nhs_engine._summarizer_model_id == "facebook/bart-large-cnn"
 
 

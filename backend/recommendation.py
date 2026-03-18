@@ -207,9 +207,9 @@ class ClinicalRecommendationEngine:
         """
         if not text:
             return ""
-        text = re.sub(r'<[^>]+>', '', text)
+        text = re.sub(r'</?s>|<pad>|<unk>|<mask>', ' ', text)
+        text = re.sub(r'<[^>]+>', ' ', text)
         text = re.sub(r'[▁▂▃▄▅▆▇█▉▊▋▌▍▎▏]', '', text)
-        text = re.sub(r'</?s>|<pad>|<unk>|<mask>', '', text)
         text = re.sub(r'\s+', ' ', text)
         text = text.strip()
         return text
