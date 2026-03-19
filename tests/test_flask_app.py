@@ -108,6 +108,59 @@ class TestFrameworkEndpoints:
 # 3. Process endpoint validation
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# 2b. Guidelines endpoint
+# ---------------------------------------------------------------------------
+
+class TestGuidelinesEndpoint:
+    def test_guidelines_nhs_returns_200(self, client):
+        resp = client.get('/guidelines/nhs_uk')
+        assert resp.status_code == 200
+
+    def test_guidelines_nhs_has_guidelines_list(self, client):
+        resp = client.get('/guidelines/nhs_uk')
+        data = json.loads(resp.data)
+        assert 'guidelines' in data
+        assert isinstance(data['guidelines'], list)
+        assert len(data['guidelines']) > 0
+        assert data['framework'] == 'nhs_uk'
+        # Verify each guideline has required fields
+        for g in data['guidelines']:
+            assert 'id' in g
+            assert 'title' in g
+            assert 'organization' in g
+            assert 'key_recommendations' in g
+
+    def test_guidelines_nhs_has_equations_list(self, client):
+        resp = client.get('/guidelines/nhs_uk')
+        data = json.loads(resp.data)
+        assert 'equations' in data
+        assert isinstance(data['equations'], list)
+        assert len(data['equations']) > 0
+        # Verify each equation has required fields
+        for eq in data['equations']:
+            assert 'id' in eq
+            assert 'name' in eq
+            assert 'formula' in eq
+            assert 'use_case' in eq
+
+    def test_guidelines_us_returns_200(self, client):
+        resp = client.get('/guidelines/us_aha')
+        assert resp.status_code == 200
+        data = json.loads(resp.data)
+        assert data['framework'] == 'us_aha'
+        assert len(data['guidelines']) > 0
+        assert len(data['equations']) > 0
+
+    def test_guidelines_unknown_returns_404(self, client):
+        resp = client.get('/guidelines/nonexistent')
+        assert resp.status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# 3. Process endpoint validation
+# ---------------------------------------------------------------------------
+
 class TestProcessEndpoint:
     def test_process_no_file_returns_400(self, client):
         resp = client.post('/process')

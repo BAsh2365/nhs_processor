@@ -7,7 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
+  PieChart, Pie, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
+} from "recharts";
+import {
   fetchFrameworks,
+  fetchGuidelines,
   processDocument,
   type Framework,
   type Scope,
@@ -15,6 +20,8 @@ import {
   type BloodTest,
   type ClinicalData,
   type ClinicalScore,
+  type GuidelineReference,
+  type ClinicalEquation,
 } from "@/lib/api";
 import {
   SparklesIcon,
@@ -72,7 +79,15 @@ const categoryLabels: Record<string, string> = {
   other: "Other",
 };
 
-// ── Blood test bar chart (pure CSS, no deps needed for this) ──
+const FLAG_CHART_COLORS: Record<string, string> = {
+  normal: "#16a34a",
+  low: "#f59e0b",
+  high: "#f59e0b",
+  critical_low: "#dc2626",
+  critical_high: "#dc2626",
+};
+
+// ── Blood test table row ──
 
 function BloodTestBar({ test }: { test: BloodTest }) {
   const isCritical = test.flag.startsWith("critical");
@@ -129,7 +144,7 @@ function ScoreCard({ score }: { score: ClinicalScore }) {
   );
 }
 
-// ── Vitals gauge row ──
+// ── Vitals gauge ──
 
 function VitalItem({ label, value, unit, range }: { label: string; value?: number; unit: string; range?: string }) {
   if (value === undefined || value === null) return null;
@@ -146,51 +161,275 @@ function VitalItem({ label, value, unit, range }: { label: string; value?: numbe
 // ── Blood test visual bar ──
 
 function BloodTestVisualBar({ test }: { test: BloodTest }) {
-  // Create a visual representation of where the value falls relative to the reference range
   const ref = test.reference_range;
   let low: number | null = null;
   let high: number | null = null;
-
   const rangeMatch = ref.match(/^(\d+\.?\d*)\s*[–-]\s*(\d+\.?\d*)$/);
   const gtMatch = ref.match(/^>(\d+\.?\d*)$/);
   const ltMatch = ref.match(/^<(\d+\.?\d*)$/);
-
-  if (rangeMatch) {
-    low = parseFloat(rangeMatch[1]);
-    high = parseFloat(rangeMatch[2]);
-  } else if (gtMatch) {
-    low = parseFloat(gtMatch[1]);
-    high = low * 2;
-  } else if (ltMatch) {
-    high = parseFloat(ltMatch[1]);
-    low = 0;
-  }
-
+  if (rangeMatch) { low = parseFloat(rangeMatch[1]); high = parseFloat(rangeMatch[2]); }
+  else if (gtMatch) { low = parseFloat(gtMatch[1]); high = low * 2; }
+  else if (ltMatch) { high = parseFloat(ltMatch[1]); low = 0; }
   if (low === null || high === null) return null;
-
   const range = high - low;
   const min = low - range * 0.3;
   const max = high + range * 0.3;
   const totalRange = max - min;
-
   const normalStart = ((low - min) / totalRange) * 100;
   const normalWidth = (range / totalRange) * 100;
   const valuePos = Math.max(0, Math.min(100, ((test.value - min) / totalRange) * 100));
-
   return (
     <div className="w-full h-3 relative mt-1 mb-0.5">
       <div className="absolute inset-0 rounded-full bg-slate-100" />
-      <div
-        className="absolute top-0 h-full rounded-full bg-green-200"
-        style={{ left: `${normalStart}%`, width: `${normalWidth}%` }}
-      />
-      <div
-        className={`absolute top-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full border-2 border-white shadow-sm ${
-          test.flag === "normal" ? "bg-green-500" : test.flag.startsWith("critical") ? "bg-red-500" : "bg-amber-500"
-        }`}
-        style={{ left: `calc(${valuePos}% - 5px)` }}
-      />
+      <div className="absolute top-0 h-full rounded-full bg-green-200" style={{ left: `${normalStart}%`, width: `${normalWidth}%` }} />
+      <div className={`absolute top-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full border-2 border-white shadow-sm ${
+        test.flag === "normal" ? "bg-green-500" : test.flag.startsWith("critical") ? "bg-red-500" : "bg-amber-500"
+      }`} style={{ left: `calc(${valuePos}% - 5px)` }} />
     </div>
+  );
+}
+
+// ── Statistics charts ──
+
+function BloodTestStatusChart({ bloodTests }: { bloodTests: BloodTest[] }) {
+  const counts = { Normal: 0, Abnormal: 0, Critical: 0 };
+  for (const bt of bloodTests) {
+    if (bt.flag === "normal") counts.Normal++;
+    else if (bt.flag.startsWith("critical")) counts.Critical++;
+    else counts.Abnormal++;
+  }
+  const data = [
+    { name: "Normal", value: counts.Normal, color: "#16a34a" },
+    { name: "Abnormal", value: counts.Abnormal, color: "#f59e0b" },
+    { name: "Critical", value: counts.Critical, color: "#dc2626" },
+  ].filter(d => d.value > 0);
+  return (
+    <div className="flex items-center gap-6">
+      <ResponsiveContainer width={120} height={120}>
+        <PieChart>
+          <Pie data={data} dataKey="value" cx="50%" cy="50%" innerRadius={30} outerRadius={50} paddingAngle={3} strokeWidth={0}>
+            {data.map((d, i) => <Cell key={i} fill={d.color} />)}
+          </Pie>
+          <Tooltip formatter={(v) => [`${v} tests`, ""]} />
+        </PieChart>
+      </ResponsiveContainer>
+      <div className="space-y-1.5">
+        {data.map(d => (
+          <div key={d.name} className="flex items-center gap-2 text-xs">
+            <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: d.color }} />
+            <span className="text-slate-600">{d.name}</span>
+            <span className="font-mono font-bold text-slate-900">{d.value}</span>
+          </div>
+        ))}
+        <div className="text-[10px] text-slate-400 pt-1">{bloodTests.length} total tests</div>
+      </div>
+    </div>
+  );
+}
+
+function BloodTestBarChart({ bloodTests }: { bloodTests: BloodTest[] }) {
+  const abnormal = bloodTests.filter(bt => bt.flag !== "normal").slice(0, 10);
+  if (abnormal.length === 0) return null;
+  const data = abnormal.map(bt => ({
+    name: bt.abbr,
+    value: bt.value,
+    color: FLAG_CHART_COLORS[bt.flag] || "#64748b",
+  }));
+  return (
+    <ResponsiveContainer width="100%" height={200}>
+      <BarChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+        <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} />
+        <YAxis tick={{ fontSize: 10 }} width={45} />
+        <Tooltip formatter={(v) => [v, "Value"]} labelStyle={{ fontSize: 11 }} />
+        <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+          {data.map((d, i) => <Cell key={i} fill={d.color} />)}
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+function VitalsRadarChart({ vitals }: { vitals: ClinicalData["vitals"] }) {
+  const items = [
+    { key: "heart_rate", label: "HR", value: vitals.heart_rate, min: 40, max: 160, normalMin: 60, normalMax: 100 },
+    { key: "spo2", label: "SpO2", value: vitals.spo2, min: 80, max: 100, normalMin: 94, normalMax: 100 },
+    { key: "systolic_bp", label: "SBP", value: vitals.systolic_bp, min: 60, max: 220, normalMin: 90, normalMax: 140 },
+    { key: "diastolic_bp", label: "DBP", value: vitals.diastolic_bp, min: 40, max: 130, normalMin: 60, normalMax: 90 },
+    { key: "respiratory_rate", label: "RR", value: vitals.respiratory_rate, min: 6, max: 40, normalMin: 12, normalMax: 20 },
+    { key: "temperature_c", label: "Temp", value: vitals.temperature_c, min: 34, max: 42, normalMin: 36.1, normalMax: 37.2 },
+  ].filter(item => item.value !== undefined);
+  if (items.length < 3) return null;
+  const data = items.map(item => ({
+    label: item.label,
+    value: Math.round(((item.value! - item.min) / (item.max - item.min)) * 100),
+    normalMin: Math.round(((item.normalMin - item.min) / (item.max - item.min)) * 100),
+    normalMax: Math.round(((item.normalMax - item.min) / (item.max - item.min)) * 100),
+    actual: item.value,
+  }));
+  return (
+    <ResponsiveContainer width="100%" height={240}>
+      <RadarChart data={data} cx="50%" cy="50%" outerRadius="70%">
+        <PolarGrid stroke="#e2e8f0" />
+        <PolarAngleAxis dataKey="label" tick={{ fontSize: 11, fill: "#64748b" }} />
+        <PolarRadiusAxis tick={false} axisLine={false} domain={[0, 100]} />
+        <Radar name="Value" dataKey="value" stroke="#991b1b" fill="#991b1b" fillOpacity={0.2} strokeWidth={2} />
+        <Tooltip formatter={(v, _name, props) => [(props as { payload?: { actual?: number } }).payload?.actual ?? v, "Value"]} />
+      </RadarChart>
+    </ResponsiveContainer>
+  );
+}
+
+// ── Evidence Library Panel ──
+
+function EvidenceLibraryPanel({ frameworkId }: { frameworkId: string }) {
+  const [guidelines, setGuidelines] = useState<GuidelineReference[]>([]);
+  const [equations, setEquations] = useState<ClinicalEquation[]>([]);
+  const [search, setSearch] = useState("");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [tab, setTab] = useState<"guidelines" | "equations">("guidelines");
+
+  useEffect(() => {
+    fetchGuidelines(frameworkId).then(data => {
+      setGuidelines(data.guidelines || []);
+      setEquations(data.equations || []);
+    }).catch(() => {});
+  }, [frameworkId]);
+
+  const q = search.toLowerCase();
+  const filteredGuidelines = guidelines.filter(g =>
+    !q || g.title.toLowerCase().includes(q) || g.organization.toLowerCase().includes(q) ||
+    g.summary.toLowerCase().includes(q) || g.code.toLowerCase().includes(q) ||
+    g.key_recommendations.some(r => r.toLowerCase().includes(q))
+  );
+  const filteredEquations = equations.filter(e =>
+    !q || e.name.toLowerCase().includes(q) || e.formula.toLowerCase().includes(q) ||
+    e.use_case.toLowerCase().includes(q) || e.category.toLowerCase().includes(q)
+  );
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-sm">
+          <svg className="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+          </svg>
+          Evidence Library
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {/* Search */}
+        <div className="relative mb-4">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+          </svg>
+          <input
+            type="text"
+            placeholder="Search guidelines, equations, recommendations..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full rounded-lg border border-slate-200 bg-white pl-9 pr-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-red-300 focus:ring-2 focus:ring-red-100 outline-none"
+          />
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-1 mb-4 border-b border-slate-100">
+          <button onClick={() => setTab("guidelines")} className={`px-4 py-2 text-xs font-medium border-b-2 transition-colors ${tab === "guidelines" ? "border-red-700 text-red-700" : "border-transparent text-slate-400 hover:text-slate-600"}`}>
+            Guidelines ({filteredGuidelines.length})
+          </button>
+          <button onClick={() => setTab("equations")} className={`px-4 py-2 text-xs font-medium border-b-2 transition-colors ${tab === "equations" ? "border-red-700 text-red-700" : "border-transparent text-slate-400 hover:text-slate-600"}`}>
+            Equations ({filteredEquations.length})
+          </button>
+        </div>
+
+        {/* Guidelines list */}
+        {tab === "guidelines" && (
+          <div className="space-y-2">
+            {filteredGuidelines.length === 0 && <p className="text-xs text-slate-400 py-4 text-center">No guidelines match your search</p>}
+            {filteredGuidelines.map(g => {
+              const isExpanded = expandedId === g.id;
+              return (
+                <div key={g.id} className={`rounded-lg border transition-colors ${isExpanded ? "border-red-200 bg-red-50/30" : "border-slate-200 hover:border-slate-300"}`}>
+                  <button onClick={() => setExpandedId(isExpanded ? null : g.id)} className="w-full text-left px-4 py-3 flex items-start gap-3">
+                    <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-[10px] font-bold text-slate-600">
+                      {g.organization.slice(0, 4)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-slate-900">{g.title}</div>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <Badge variant="outline" className="text-[10px] border-slate-200">{g.code}</Badge>
+                        <span className="text-[10px] text-slate-400">{g.organization} &middot; {g.year} &middot; Updated {g.last_updated}</span>
+                      </div>
+                    </div>
+                    <svg className={`h-4 w-4 text-slate-400 shrink-0 mt-1 transition-transform ${isExpanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                    </svg>
+                  </button>
+                  {isExpanded && (
+                    <div className="px-4 pb-4 space-y-3">
+                      <p className="text-xs leading-relaxed text-slate-600">{g.summary}</p>
+                      <div>
+                        <div className="text-[10px] font-medium text-slate-500 uppercase tracking-wider mb-1.5">Key Recommendations</div>
+                        <ul className="space-y-1">
+                          {g.key_recommendations.map((r, i) => (
+                            <li key={i} className="flex items-start gap-2 text-xs text-slate-700">
+                              <CheckCircleIcon className="h-3.5 w-3.5 text-green-600 shrink-0 mt-0.5" />
+                              {r}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <a href={g.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs font-medium text-red-700 hover:text-red-900">
+                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                        </svg>
+                        View full guideline
+                      </a>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Equations list */}
+        {tab === "equations" && (
+          <div className="space-y-2">
+            {filteredEquations.length === 0 && <p className="text-xs text-slate-400 py-4 text-center">No equations match your search</p>}
+            {filteredEquations.map(eq => {
+              const isExpanded = expandedId === eq.id;
+              return (
+                <div key={eq.id} className={`rounded-lg border transition-colors ${isExpanded ? "border-blue-200 bg-blue-50/30" : "border-slate-200 hover:border-slate-300"}`}>
+                  <button onClick={() => setExpandedId(isExpanded ? null : eq.id)} className="w-full text-left px-4 py-3 flex items-start gap-3">
+                    <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 15.75V18m-7.5-6.75h.008v.008H8.25v-.008zm0 2.25h.008v.008H8.25V13.5zm0 2.25h.008v.008H8.25v-.008zm0 2.25h.008v.008H8.25V18zm2.498-6.75h.007v.008h-.007v-.008zm0 2.25h.007v.008h-.007V13.5zm0 2.25h.007v.008h-.007v-.008zm0 2.25h.007v.008h-.007V18zm2.504-6.75h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V13.5z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-slate-900">{eq.name}</div>
+                      <Badge variant="outline" className="text-[10px] border-slate-200 mt-0.5">{eq.category.replace(/_/g, " ")}</Badge>
+                    </div>
+                    <svg className={`h-4 w-4 text-slate-400 shrink-0 mt-1 transition-transform ${isExpanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                    </svg>
+                  </button>
+                  {isExpanded && (
+                    <div className="px-4 pb-4 space-y-2">
+                      <div className="rounded-md bg-slate-900 px-4 py-3">
+                        <code className="text-xs text-green-400 font-mono">{eq.formula}</code>
+                      </div>
+                      <p className="text-xs text-slate-600"><span className="font-medium">Use:</span> {eq.use_case}</p>
+                      <p className="text-[10px] text-slate-400 italic">{eq.reference}</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -222,14 +461,8 @@ function TriagePageContent() {
 
   const handleFile = useCallback((f: File) => {
     const ext = f.name.split(".").pop()?.toLowerCase();
-    if (!ext || !["pdf", "txt"].includes(ext)) {
-      setError("Please upload a PDF or TXT file.");
-      return;
-    }
-    if (f.size > 16 * 1024 * 1024) {
-      setError("File exceeds 16 MB limit.");
-      return;
-    }
+    if (!ext || !["pdf", "txt"].includes(ext)) { setError("Please upload a PDF or TXT file."); return; }
+    if (f.size > 16 * 1024 * 1024) { setError("File exceeds 16 MB limit."); return; }
     setFile(f);
     setError(null);
     setResult(null);
@@ -247,22 +480,16 @@ function TriagePageContent() {
     setResult(null);
     setError(null);
     setCurrentStep(0);
-
     stepInterval.current = setInterval(() => {
       setCurrentStep((s) => Math.min(s + 1, STEP_LABELS.length - 1));
     }, 2500);
-
     try {
       const data = await processDocument(file, selectedFramework, selectedScopes);
       clearInterval(stepInterval.current!);
       setCurrentStep(STEP_LABELS.length);
       setTimeout(() => {
         setProcessing(false);
-        if (data.status === "success") {
-          setResult(data);
-        } else {
-          setError(data.error || "An unexpected error occurred.");
-        }
+        if (data.status === "success") { setResult(data); } else { setError(data.error || "An unexpected error occurred."); }
       }, 500);
     } catch {
       clearInterval(stepInterval.current!);
@@ -318,7 +545,9 @@ function TriagePageContent() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold tracking-tight text-slate-900">Triage Result</h2>
-            <p className="mt-1 text-sm text-slate-500">Analysis complete for uploaded document</p>
+            <p className="mt-1 text-sm text-slate-500">
+              Analysis complete &middot; Framework: <span className="font-medium text-slate-700">{result.framework || selectedFramework}</span>
+            </p>
           </div>
           <Button onClick={reset} variant="outline">New Analysis</Button>
         </div>
@@ -352,7 +581,6 @@ function TriagePageContent() {
         {/* ── Patient Demographics & Vitals ── */}
         {(hasDemographics || hasVitals) && (
           <div className="grid gap-4 md:grid-cols-2">
-            {/* Demographics */}
             {hasDemographics && (
               <Card>
                 <CardHeader className="pb-3">
@@ -400,7 +628,6 @@ function TriagePageContent() {
               </Card>
             )}
 
-            {/* Vitals */}
             {hasVitals && (
               <Card>
                 <CardHeader className="pb-3">
@@ -416,9 +643,7 @@ function TriagePageContent() {
                     {cd!.vitals.systolic_bp !== undefined && cd!.vitals.diastolic_bp !== undefined && (
                       <div className="flex flex-col items-center rounded-lg border border-slate-200 bg-white px-4 py-3 min-w-[100px]">
                         <span className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">BP</span>
-                        <span className="text-xl font-bold text-slate-900 font-mono tabular-nums">
-                          {cd!.vitals.systolic_bp}/{cd!.vitals.diastolic_bp}
-                        </span>
+                        <span className="text-xl font-bold text-slate-900 font-mono tabular-nums">{cd!.vitals.systolic_bp}/{cd!.vitals.diastolic_bp}</span>
                         <span className="text-[10px] text-slate-400">mmHg</span>
                       </div>
                     )}
@@ -426,6 +651,36 @@ function TriagePageContent() {
                     <VitalItem label="SpO2" value={cd!.vitals.spo2} unit="%" range=">94%" />
                     <VitalItem label="Temp" value={cd!.vitals.temperature_c} unit="°C" range="36.1-37.2" />
                     <VitalItem label="RR" value={cd!.vitals.respiratory_rate} unit="/min" range="12-20" />
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
+
+        {/* ── Vitals Radar + Blood Test Summary Charts ── */}
+        {(hasVitals || hasBloodTests) && (
+          <div className="grid gap-4 md:grid-cols-2">
+            {hasVitals && cd?.vitals && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm">Vitals Overview</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <VitalsRadarChart vitals={cd.vitals} />
+                </CardContent>
+              </Card>
+            )}
+            {hasBloodTests && cd?.blood_tests && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm">Blood Test Summary</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <BloodTestStatusChart bloodTests={cd.blood_tests} />
+                  <div className="mt-4">
+                    <div className="text-[10px] font-medium text-slate-500 uppercase tracking-wider mb-2">Abnormal Values</div>
+                    <BloodTestBarChart bloodTests={cd.blood_tests} />
                   </div>
                 </CardContent>
               </Card>
@@ -475,13 +730,10 @@ function TriagePageContent() {
                           </tr>
                         </thead>
                         <tbody>
-                          {tests.map((t) => (
-                            <BloodTestBar key={t.key} test={t} />
-                          ))}
+                          {tests.map((t) => <BloodTestBar key={t.key} test={t} />)}
                         </tbody>
                       </table>
                     </div>
-                    {/* Visual bars */}
                     <div className="mt-2 space-y-1 px-1">
                       {tests.map((t) => (
                         <div key={`bar-${t.key}`}>
@@ -515,17 +767,11 @@ function TriagePageContent() {
               <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {cd!.medications.map((med, i) => (
                   <div key={i} className="flex items-start gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2.5">
-                    <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-slate-100 text-[10px] font-bold text-slate-500">
-                      Rx
-                    </div>
+                    <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-slate-100 text-[10px] font-bold text-slate-500">Rx</div>
                     <div className="min-w-0">
                       <div className="text-sm font-medium text-slate-900 capitalize truncate">{med.name}</div>
-                      <div className="text-[11px] text-slate-500">
-                        {[med.dose, med.frequency].filter(Boolean).join(" · ") || med.drug_class}
-                      </div>
-                      <Badge variant="outline" className="mt-1 text-[10px] border-slate-200 text-slate-400">
-                        {med.drug_class}
-                      </Badge>
+                      <div className="text-[11px] text-slate-500">{[med.dose, med.frequency].filter(Boolean).join(" · ") || med.drug_class}</div>
+                      <Badge variant="outline" className="mt-1 text-[10px] border-slate-200 text-slate-400">{med.drug_class}</Badge>
                     </div>
                   </div>
                 ))}
@@ -547,9 +793,7 @@ function TriagePageContent() {
             </CardHeader>
             <CardContent>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {cd!.clinical_scores.map((s, i) => (
-                  <ScoreCard key={i} score={s} />
-                ))}
+                {cd!.clinical_scores.map((s, i) => <ScoreCard key={i} score={s} />)}
               </div>
             </CardContent>
           </Card>
@@ -567,9 +811,7 @@ function TriagePageContent() {
               {allFlags.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
                   {allFlags.map((f, i) => (
-                    <Badge key={i} variant="secondary" className={`${uc === "routine" ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-red-50 text-red-700 border-red-200"} border`}>
-                      {f}
-                    </Badge>
+                    <Badge key={i} variant="secondary" className={`${uc === "routine" ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-red-50 text-red-700 border-red-200"} border`}>{f}</Badge>
                   ))}
                 </div>
               ) : <p className="text-sm text-slate-400">No red flags detected</p>}
@@ -603,6 +845,9 @@ function TriagePageContent() {
             </div>
           </CardContent>
         </Card>
+
+        {/* ── Evidence Library ── */}
+        <EvidenceLibraryPanel frameworkId={result.framework || selectedFramework} />
       </div>
     );
   }
@@ -635,7 +880,8 @@ function TriagePageContent() {
               <select
                 value={selectedFramework}
                 onChange={(e) => setSelectedFramework(e.target.value)}
-                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-red-300 focus:ring-2 focus:ring-red-100 outline-none"
+                disabled={processing}
+                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-red-300 focus:ring-2 focus:ring-red-100 outline-none disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {frameworks.map((fw) => (
                   <option key={fw.id} value={fw.id}>{fw.name}</option>
@@ -648,12 +894,13 @@ function TriagePageContent() {
                 {scopes.length > 0 ? scopes.map((s) => (
                   <button
                     key={s.id}
+                    disabled={processing}
                     onClick={() =>
                       setSelectedScopes((prev) =>
                         prev.includes(s.id) ? prev.filter((x) => x !== s.id) : [...prev, s.id]
                       )
                     }
-                    className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+                    className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-50 ${
                       selectedScopes.includes(s.id)
                         ? "border-red-200 bg-red-50 text-red-700"
                         : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
@@ -697,13 +944,7 @@ function TriagePageContent() {
               onDrop={handleDrop}
               onClick={() => fileRef.current?.click()}
             >
-              <input
-                ref={fileRef}
-                type="file"
-                accept=".pdf,.txt"
-                className="hidden"
-                onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
-              />
+              <input ref={fileRef} type="file" accept=".pdf,.txt" className="hidden" onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} />
               {file ? (
                 <div className="flex items-center gap-4">
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-red-200 bg-white text-red-600">
@@ -713,12 +954,7 @@ function TriagePageContent() {
                     <div className="text-sm font-medium text-slate-900 truncate">{file.name}</div>
                     <div className="text-xs text-slate-400">{fmtSize(file.size)}</div>
                   </div>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="text-slate-400 hover:text-red-600"
-                    onClick={(e) => { e.stopPropagation(); reset(); }}
-                  >
+                  <Button size="sm" variant="ghost" className="text-slate-400 hover:text-red-600" onClick={(e) => { e.stopPropagation(); reset(); }}>
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>
@@ -736,12 +972,7 @@ function TriagePageContent() {
                 </>
               )}
             </div>
-
-            <Button
-              className="mt-4 w-full bg-red-800 text-white hover:bg-red-900 h-11"
-              disabled={!file}
-              onClick={handleProcess}
-            >
+            <Button className="mt-4 w-full bg-red-800 text-white hover:bg-red-900 h-11" disabled={!file} onClick={handleProcess}>
               <SparklesIcon className="mr-2 h-4 w-4" />
               Analyse Document
             </Button>

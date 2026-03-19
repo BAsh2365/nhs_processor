@@ -157,6 +157,41 @@ export async function processDocument(
   return res.json();
 }
 
+// --- Guideline reference types ---
+
+export interface GuidelineReference {
+  id: string;
+  title: string;
+  organization: string;
+  code: string;
+  year: number;
+  last_updated: string;
+  category: string;
+  url: string;
+  summary: string;
+  key_recommendations: string[];
+}
+
+export interface ClinicalEquation {
+  id: string;
+  name: string;
+  category: string;
+  formula: string;
+  reference: string;
+  use_case: string;
+}
+
+export interface GuidelinesData {
+  framework: string;
+  guidelines: GuidelineReference[];
+  equations: ClinicalEquation[];
+}
+
+export async function fetchGuidelines(frameworkId: string): Promise<GuidelinesData> {
+  const res = await fetch(`${API_BASE}/guidelines/${frameworkId}`);
+  return res.json();
+}
+
 export async function fetchHealth(): Promise<HealthStatus> {
   const res = await fetch(`${API_BASE}/health`);
   return res.json();

@@ -349,6 +349,254 @@ def create_app():
         # 10 documents per minute per IP, 60 per hour
         process_document = limiter.limit("10 per minute;60 per hour")(process_document)
 
+    # ── Guidelines reference data ────────────────────────────────────
+
+    _SHARED_EQUATIONS = [
+        {
+            "id": "egfr_ckd_epi",
+            "name": "eGFR (CKD-EPI 2021)",
+            "category": "renal",
+            "formula": "142 × min(Scr/κ, 1)^α × max(Scr/κ, 1)^(-1.200) × 0.9938^Age × (1.012 if female)",
+            "reference": "Inker LA, et al. N Engl J Med. 2021;385(19):1737-1749",
+            "use_case": "Renal function assessment for pre-operative risk and drug dosing"
+        },
+        {
+            "id": "cha2ds2vasc",
+            "name": "CHA₂DS₂-VASc Score",
+            "category": "stroke_risk",
+            "formula": "CHF(1) + Hypertension(1) + Age≥75(2) + Diabetes(1) + Stroke/TIA(2) + Vascular disease(1) + Age 65-74(1) + Sex(female=1)",
+            "reference": "Lip GYH, et al. Chest. 2010;137(2):263-272",
+            "use_case": "Stroke risk stratification in atrial fibrillation to guide anticoagulation"
+        },
+        {
+            "id": "hasbled",
+            "name": "HAS-BLED Score",
+            "category": "bleeding_risk",
+            "formula": "Hypertension(1) + Abnormal renal/liver(1-2) + Stroke(1) + Bleeding(1) + Labile INR(1) + Elderly(1) + Drugs/alcohol(1-2)",
+            "reference": "Pisters R, et al. Chest. 2010;138(5):1093-1100",
+            "use_case": "Bleeding risk assessment in patients on anticoagulation"
+        },
+        {
+            "id": "qtc_bazett",
+            "name": "QTc (Bazett's Formula)",
+            "category": "ecg",
+            "formula": "QTc = QT / √(RR interval)",
+            "reference": "Bazett HC. Heart. 1920;7:353-370",
+            "use_case": "Corrected QT interval for heart rate, used in drug safety monitoring and arrhythmia risk"
+        },
+        {
+            "id": "bmi",
+            "name": "Body Mass Index",
+            "category": "anthropometry",
+            "formula": "BMI = weight(kg) / height(m)²",
+            "reference": "WHO Expert Consultation. Lancet. 2004;363(9403):157-163",
+            "use_case": "Nutritional status and surgical risk stratification"
+        },
+        {
+            "id": "bsa_dubois",
+            "name": "Body Surface Area (Du Bois)",
+            "category": "anthropometry",
+            "formula": "BSA = 0.007184 × height(cm)^0.725 × weight(kg)^0.425",
+            "reference": "Du Bois D, Du Bois EF. Arch Intern Med. 1916;17:863-871",
+            "use_case": "Drug dosing, cardiac index calculation, valve area indexing"
+        },
+        {
+            "id": "map",
+            "name": "Mean Arterial Pressure",
+            "category": "haemodynamics",
+            "formula": "MAP = DBP + (SBP - DBP) / 3",
+            "reference": "Standard haemodynamic formula",
+            "use_case": "Organ perfusion assessment and haemodynamic monitoring"
+        }
+    ]
+
+    _GUIDELINES_DATA = {
+        "nhs_uk": {
+            "framework": "nhs_uk",
+            "guidelines": [
+                {
+                    "id": "nice_cg95",
+                    "title": "Chest Pain of Recent Onset: Assessment and Diagnosis",
+                    "organization": "NICE",
+                    "code": "CG95",
+                    "year": 2010,
+                    "last_updated": "2016 (confirmed 2019)",
+                    "category": "chest_pain",
+                    "url": "https://www.nice.org.uk/guidance/cg95",
+                    "summary": "Guidance on assessing and diagnosing recent-onset chest pain. Covers initial assessment, diagnosis of ACS, and stable angina evaluation pathways.",
+                    "key_recommendations": [
+                        "Use clinical assessment to estimate likelihood of CAD",
+                        "Offer CT coronary angiography as first-line investigation for stable chest pain",
+                        "Use HEART score or clinical judgement for ACS risk stratification"
+                    ]
+                },
+                {
+                    "id": "nice_ng185",
+                    "title": "Acute Coronary Syndromes",
+                    "organization": "NICE",
+                    "code": "NG185",
+                    "year": 2020,
+                    "last_updated": "2024",
+                    "category": "acs",
+                    "url": "https://www.nice.org.uk/guidance/ng185",
+                    "summary": "Management of acute coronary syndromes including NSTEMI and unstable angina. Covers diagnosis, risk assessment, and treatment pathways.",
+                    "key_recommendations": [
+                        "Use high-sensitivity troponin testing for diagnosis",
+                        "Offer coronary angiography within 72 hours for intermediate-high risk NSTEMI",
+                        "Dual antiplatelet therapy for 12 months post-ACS"
+                    ]
+                },
+                {
+                    "id": "nice_ng208",
+                    "title": "Heart Valve Disease Presenting in Adults",
+                    "organization": "NICE",
+                    "code": "NG208",
+                    "year": 2021,
+                    "last_updated": "2025",
+                    "category": "valve_disease",
+                    "url": "https://www.nice.org.uk/guidance/ng208",
+                    "summary": "Investigation, management and monitoring of heart valve disease in adults. Includes guidance on timing of intervention.",
+                    "key_recommendations": [
+                        "Echocardiography as first-line investigation for suspected valve disease",
+                        "Refer for surgical assessment when symptoms develop or LV dysfunction occurs",
+                        "Annual follow-up for moderate or severe asymptomatic valve disease"
+                    ]
+                },
+                {
+                    "id": "nice_ng106",
+                    "title": "Chronic Heart Failure in Adults",
+                    "organization": "NICE",
+                    "code": "NG106",
+                    "year": 2018,
+                    "last_updated": "Sep 2025",
+                    "category": "heart_failure",
+                    "url": "https://www.nice.org.uk/guidance/ng106",
+                    "summary": "Diagnosis and management of chronic heart failure. Updated 2025 to include SGLT2 inhibitor recommendations.",
+                    "key_recommendations": [
+                        "NT-proBNP as first-line diagnostic test (refer if >400 ng/L)",
+                        "ACEi/ARB + beta-blocker + MRA as foundation therapy for HFrEF",
+                        "SGLT2 inhibitors recommended for HFrEF regardless of diabetes status",
+                        "Consider CRT or ICD based on ejection fraction and QRS duration"
+                    ]
+                },
+                {
+                    "id": "nice_ng238",
+                    "title": "Cardiovascular Disease: Risk Assessment and Reduction",
+                    "organization": "NICE",
+                    "code": "NG238",
+                    "year": 2023,
+                    "last_updated": "Sep 2025",
+                    "category": "risk_assessment",
+                    "url": "https://www.nice.org.uk/guidance/ng238",
+                    "summary": "Risk assessment and lipid modification for primary and secondary prevention of cardiovascular disease.",
+                    "key_recommendations": [
+                        "Use QRISK3 for 10-year CVD risk assessment",
+                        "Offer statin therapy if 10-year risk ≥10%",
+                        "Consider PCSK9 inhibitors for familial hypercholesterolaemia or high-risk patients"
+                    ]
+                },
+                {
+                    "id": "nhs_cardiac_spec",
+                    "title": "Adult Cardiac Surgery Service Specification",
+                    "organization": "NHS England",
+                    "code": "E05/S/a",
+                    "year": 2024,
+                    "last_updated": "Jul 2024",
+                    "category": "surgical",
+                    "url": "https://www.england.nhs.uk/commissioning/spec-services/npc-crg/group-a/a05/",
+                    "summary": "Service specification for adult cardiac surgical services including referral pathways, waiting times, and quality standards.",
+                    "key_recommendations": [
+                        "18-week referral-to-treatment standard for routine cases",
+                        "Urgent cases assessed within 2 weeks",
+                        "Emergency cases immediate escalation to cardiac surgical team"
+                    ]
+                }
+            ],
+            "equations": _SHARED_EQUATIONS
+        },
+        "us_aha": {
+            "framework": "us_aha",
+            "guidelines": [
+                {
+                    "id": "aha_chest_pain_2021",
+                    "title": "2021 AHA/ACC Guideline for the Evaluation and Diagnosis of Chest Pain",
+                    "organization": "AHA/ACC",
+                    "code": "2021 Chest Pain",
+                    "year": 2021,
+                    "last_updated": "2021",
+                    "category": "chest_pain",
+                    "url": "https://www.ahajournals.org/doi/10.1161/CIR.0000000000001029",
+                    "summary": "Evidence-based guideline for evaluating and diagnosing chest pain. Covers initial assessment, risk stratification, and diagnostic testing pathways for acute and stable chest pain presentations.",
+                    "key_recommendations": [
+                        "Use structured risk assessment tools (HEART, TIMI, GRACE) for ACS evaluation",
+                        "CCTA recommended as first-line for low-to-intermediate risk stable chest pain",
+                        "High-sensitivity troponin preferred for acute chest pain evaluation",
+                        "Shared decision-making for diagnostic testing in stable chest pain"
+                    ]
+                },
+                {
+                    "id": "aha_vhd_2020",
+                    "title": "2020 ACC/AHA Guideline for the Management of Patients With Valvular Heart Disease",
+                    "organization": "ACC/AHA",
+                    "code": "2020 VHD",
+                    "year": 2020,
+                    "last_updated": "2021 (focused update)",
+                    "category": "valve_disease",
+                    "url": "https://www.ahajournals.org/doi/10.1161/CIR.0000000000000923",
+                    "summary": "Comprehensive guideline for valvular heart disease management including diagnosis, monitoring, and intervention timing for all major valve lesions.",
+                    "key_recommendations": [
+                        "Transthoracic echocardiography as primary diagnostic tool for VHD",
+                        "Intervention recommended when symptoms develop or LV dysfunction criteria met",
+                        "TAVR or SAVR decision based on patient risk, anatomy, and shared decision-making",
+                        "Surveillance intervals based on disease severity (annual for severe, 3-5 years for mild)"
+                    ]
+                },
+                {
+                    "id": "aha_hf_2022",
+                    "title": "2022 AHA/ACC/HFSA Guideline for the Management of Heart Failure",
+                    "organization": "AHA/ACC/HFSA",
+                    "code": "2022 HF",
+                    "year": 2022,
+                    "last_updated": "2023 (focused update)",
+                    "category": "heart_failure",
+                    "url": "https://www.ahajournals.org/doi/10.1161/CIR.0000000000001063",
+                    "summary": "Updated guideline for heart failure management with revised classification (HFrEF, HFmrEF, HFpEF, HFimpEF) and new therapy recommendations including SGLT2 inhibitors.",
+                    "key_recommendations": [
+                        "GDMT with ARNi/ACEi/ARB + beta-blocker + MRA + SGLT2i for HFrEF",
+                        "SGLT2 inhibitors recommended for HFrEF, HFmrEF, and HFpEF (Class 2a)",
+                        "BNP/NT-proBNP for diagnosis and prognosis",
+                        "Consider CRT for LVEF ≤35%, LBBB, QRS ≥150 ms"
+                    ]
+                },
+                {
+                    "id": "aha_acs_2025",
+                    "title": "2025 ACC/AHA Guideline for the Management of Acute Coronary Syndromes",
+                    "organization": "ACC/AHA",
+                    "code": "2025 ACS",
+                    "year": 2025,
+                    "last_updated": "2025",
+                    "category": "acs",
+                    "url": "https://www.ahajournals.org/doi/10.1161/CIR.0000000000001309",
+                    "summary": "Updated guideline for ACS management covering STEMI, NSTEMI, and unstable angina. Includes revised revascularization strategies and updated antithrombotic therapy recommendations.",
+                    "key_recommendations": [
+                        "High-sensitivity troponin with rapid rule-out protocols (0/1h or 0/3h)",
+                        "Early invasive strategy within 24 hours for high-risk NSTEMI",
+                        "DAPT duration individualized based on ischemic and bleeding risk",
+                        "Routine pre-treatment with P2Y12 inhibitors no longer recommended for NSTEMI"
+                    ]
+                }
+            ],
+            "equations": _SHARED_EQUATIONS
+        }
+    }
+
+    @app.route('/guidelines/<framework_id>')
+    def get_guidelines(framework_id):
+        """Return structured guideline reference data — unauthenticated."""
+        if framework_id not in _GUIDELINES_DATA:
+            return jsonify({"error": f"Unknown framework: {framework_id}"}), 404
+        return jsonify(_GUIDELINES_DATA[framework_id])
+
     @app.route('/health')
     def health():
         """Health check endpoint — unauthenticated so load balancers can probe."""
